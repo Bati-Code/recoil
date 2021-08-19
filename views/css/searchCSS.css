@@ -1,0 +1,68 @@
+.userInfoWrap{
+    display: flex;
+    flex-direction: row;
+    background-color: #f4f4f4;
+    margin-bottom: 10px;
+}
+
+.userInfoWrap .userIcon{
+    width: 20%;
+}
+
+.userInfoWrap .userIcon .userIconImage{
+    width: 100%;
+}
+
+.userInfoWrap .userBasicData{
+    width: 100%;
+}
+
+.MatchWrap{
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 5px;
+    padding: 0 10px;
+}
+
+#Match_true{
+    background-color: #a3cfec;
+}
+
+#Match_false{
+    background-color: #e2b6b3;
+}
+
+.MatchWrap .MyWrap .MyChampionInfo{
+    display: flex;
+    flex-direction: column;
+}
+
+.MatchWrap .MyWrap .MyChampionInfo .MyChampionImage{
+    width: 70px;
+}
+
+.MatchWrap .MyWrap .MyChampionInfo .MyChampionImage img{
+    border-radius: 100px;
+}
+
+.MatchWrap .MatchStatWrap{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.teamWrap{
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+}
+
+
+.teamWrap .team1{
+    margin-right: 15px;
+}
+
+img {
+    width: 100%;
+}
