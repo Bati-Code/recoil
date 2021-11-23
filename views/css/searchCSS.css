@@ -22,6 +22,8 @@
     flex-direction: row;
     margin-bottom: 5px;
     padding: 0 10px;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 #Match_true{
@@ -32,9 +34,18 @@
     background-color: #e2b6b3;
 }
 
+.MatchWrap .MyWrap{
+    align-items: center;
+}
+
+.MatchWrap .MyWrap .summoner1{
+    margin-bottom: 5px;
+
+}
 .MatchWrap .MyWrap .MyChampionInfo{
     display: flex;
     flex-direction: column;
+    margin-right: 10px;
 }
 
 .MatchWrap .MyWrap .MyChampionInfo .MyChampionImage{

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const riotAPI_Key = 'RGAPI-6e66d216-c566-4583-a36f-a3e31134c5ee';
+const riotAPI_Key = 'RGAPI-e5393875-43e3-4260-97f4-577f1b70b6a0';
 
 
 module.exports = (app) => {
@@ -80,15 +80,15 @@ module.exports = (app) => {
                 'Summoner_Match_Data': Summoner_Match_Data
             })
 
-
-
-
-
-
         } catch (error) {
             console.log(error);
         }
 
+    })
+
+    app.get('/test', async (req, res) => {
+
+        res.json("AA");
     })
 
 }
