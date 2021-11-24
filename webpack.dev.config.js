@@ -54,9 +54,6 @@ module.exports = (env, options) => {
 						},
 						{
 							loader: "less-loader",
-							options: {
-								javascriptEnabled: true,
-							},
 						},
 					],
 				},

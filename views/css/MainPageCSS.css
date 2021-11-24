@@ -60,19 +60,18 @@ body{
 
  .board_content nav{
      background-color: white;
-     flex-basis: 20%;
-     flex-shrink: 0;
+     width: 20%;
  }
 
  .board_content main{
-     width: 100%;
+     width: 60%;
+     min-width: 1000px;
      align-items: center;
  }
 
  .board_content aside{
      background-color: white;
-     flex-basis: 20%;
-     flex-shrink: 0;
+     width: 20%;
  }
 
  .Board_footer{

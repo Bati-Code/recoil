@@ -36,6 +36,7 @@
 
 .MatchWrap .MyWrap{
     align-items: center;
+    width: 170px;
 }
 
 .MatchWrap .MyWrap .summoner1{
@@ -45,15 +46,21 @@
 .MatchWrap .MyWrap .MyChampionInfo{
     display: flex;
     flex-direction: column;
+    width: 50%;
+    align-items: center;
     margin-right: 10px;
 }
 
 .MatchWrap .MyWrap .MyChampionInfo .MyChampionImage{
-    width: 70px;
+    width: 60px;
 }
 
 .MatchWrap .MyWrap .MyChampionInfo .MyChampionImage img{
     border-radius: 100px;
+}
+
+.MatchWrap .MyWrap .perk .sub_perk_image{
+    padding: 6px;
 }
 
 .MatchWrap .MatchStatWrap{
@@ -63,15 +70,36 @@
     align-items: center;
 }
 
+.MatchWrap .MatchStatWrap .game_time{
+    font-size: 11px;
+}
+
+.itemWrap{
+    width: 115px;
+}
+
+.itemWrap .user_item{
+    display: inline-block;
+}
+
 .teamWrap{
     display: flex;
     flex-direction: row;
     margin-bottom: 15px;
 }
 
-
 .teamWrap .team1{
     margin-right: 15px;
+}
+
+.teamWrap .sub_champion_image{
+    width: 20px;
+}
+
+.teamWrap .team_participants{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 img {
