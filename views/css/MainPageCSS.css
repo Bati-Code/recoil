@@ -60,18 +60,18 @@ body{
 
  .board_content nav{
      background-color: white;
-     width: 20%;
+     width: 25%;
  }
 
  .board_content main{
-     width: 60%;
+     width: 50%;
      min-width: 1000px;
      align-items: center;
  }
 
  .board_content aside{
      background-color: white;
-     width: 20%;
+     width: 25%;
  }
 
  .Board_footer{

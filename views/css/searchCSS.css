@@ -85,7 +85,9 @@
 .teamWrap{
     display: flex;
     flex-direction: row;
-    margin-bottom: 15px;
+    margin-top: 7px;
+    margin-bottom: 7px;
+    font-size: 11px;
 }
 
 .teamWrap .team1{

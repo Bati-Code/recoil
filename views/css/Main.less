@@ -45,3 +45,41 @@
     width: 15%;
 }
 
+.custom_tooltip_container{
+    position: relative;
+}
+
+.custom_tooltip_container:hover >.custom_tooltip{
+    display: block;
+}
+
+.custom_tooltip{
+    display: none;
+    z-index: 200;
+    position: absolute;
+    background-color: gray;
+    color: white;
+    bottom: 100%;
+    padding: 5px;
+    width: 332px;
+    left: -115px;
+    font-size: 12px;
+    word-wrap: break-word;
+
+    speed{
+        color: yellow
+    }
+    item_title{
+        color: yellowgreen;
+    }
+    item_gold{
+        color: gold;
+    }
+    stats{
+        color: #eae6ff;
+    }
+}
+
+
+
+

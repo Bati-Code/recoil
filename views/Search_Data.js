@@ -10,15 +10,19 @@ import Item_Data from '../public/json_data/item.json';
 
 import './css/searchCSS.css';
 import './css/Main.less'
+import Tooltip from '../item/Tooltip';
+import Detail_Data from './Detail_Data';
 
 const Search_Data = (props) => {
 
-    const [getSummonerName, setSummonerName] = useState();
     const [getSummonerBasicData, setSummonerBasicData] = useState({});
     const [getSummonerIconURL, setSummonerIconURL] =
         useState('http://ddragon.leagueoflegends.com/' +
             'cdn/11.16.1/img/profileicon/0.png');
     const [getSummonerRankData, setSummonerRankData] = useState({});
+
+    const [get_Detail_Bar_Click, set_Detail_Bar_Click] = useState(false);
+    const [get_GameId, set_GameId] = useState('');
 
     useEffect(() => {
         setSummonerBasicData(props.SummonerBasicData);
@@ -27,11 +31,12 @@ const Search_Data = (props) => {
 
     }, [props])
 
-    const get_Champion_Image = (champion_name) => {
+    const detail_bar_handler = (game_id) => {
+        set_GameId(game_id);
+        set_Detail_Bar_Click(!get_Detail_Bar_Click);
 
-        return 'http://ddragon.leagueoflegends.com/cdn/11.23.1/img/'
-            + 'champion/' + champion_name + '.png';
     }
+
 
     return (
         <>
@@ -58,7 +63,7 @@ const Search_Data = (props) => {
                         </div>
                     </div>
                     <div className="flex width100">
-                        <div className="width33">
+                        <div className="width30">
                             <div className="flex">
                                 <div className="width30">
                                     <img className='userIconImage' src={"/images/ranked_emblems/Emblem_" + getSummonerRankData?.tier + ".png"} />
@@ -76,7 +81,7 @@ const Search_Data = (props) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="width66">
+                        <div className="width70">
                             {getSummonerBasicData?.Summoner_Match_Data?.map((data, index) => {
 
                                 console.log("DATA : ", getSummonerBasicData);
@@ -88,10 +93,11 @@ const Search_Data = (props) => {
                                 const user_champion_data = data.info.participants[user_index];
 
                                 //유저 챔피언
+                                const user_Champion_ko_data = Champion_Data.data[user_champion_data.championName];
                                 const user_Champion_img = 'http://ddragon.leagueoflegends.com/cdn/11.23.1/img/'
                                     + 'champion/' + user_champion_data.championName + '.png';
 
-                                console.log(data);
+                                console.log("Each_Data : ", data);
 
                                 //게임 시간
                                 let temp_game_time = data.info.gameDuration;
@@ -133,10 +139,12 @@ const Search_Data = (props) => {
                                 const user_summoner1 = Object.keys(Summoner_Data.data).filter(e => {
                                     return Summoner_Data.data[e].key == user_champion_data.summoner1Id;
                                 });
-
                                 const user_summoner2 = Object.keys(Summoner_Data.data).filter(e => {
                                     return Summoner_Data.data[e].key == user_champion_data.summoner2Id;
                                 });
+
+                                const user_summoner1_data = Summoner_Data.data[user_summoner1[0]];
+                                const user_summoner2_data = Summoner_Data.data[user_summoner2[0]];
 
                                 const user_summoner1_img = 'http://ddragon.leagueoflegends.com/cdn/11.23.1/'
                                     + 'img/spell/' + user_summoner1[0] + '.png';
@@ -162,6 +170,9 @@ const Search_Data = (props) => {
                                 const primary_perk_img = '/images/' + find_primary_perk_main[0].icon;
                                 const sub_perk_category_img = '/images/' + find_sub_category.icon;
 
+                                const primary_perk_data = find_primary_perk_main[0];
+                                const sub_perk_data_name = find_sub_category.name;
+
                                 //아이템
                                 let user_item_array = [];
 
@@ -185,190 +196,227 @@ const Search_Data = (props) => {
 
 
                                 return (
-                                    <div key={index} className="MatchWrap" id={user_win ? 'Match_true' : 'Match_false'}>
-                                        <div>
+                                    <div>
+                                        <div key={index} className="MatchWrap" id={user_win ? 'Match_true' : 'Match_false'}>
                                             <div>
-                                                {game_type}
+                                                <div>
+                                                    {game_type}
+                                                </div>
+                                                <div className="MatchStatWrap">
+                                                    <div>
+                                                        {user_win ? '승리' : '패배'}
+                                                    </div>
+                                                    <div className="game_time">
+                                                        {game_Duration}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="MyWrap flex">
+                                                <div className="MyChampionInfo">
+                                                    <Tooltip message={user_Champion_ko_data.blurb}>
+                                                        <div className="MyChampionImage">
+                                                            <img src={user_Champion_img} />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <div>
+                                                        {user_Champion_ko_data.name}
+                                                    </div>
+                                                </div>
+                                                <div className="width20">
+                                                    <Tooltip message={user_summoner1_data.description}>
+                                                        <div className="summoner1">
+                                                            <img src={user_summoner1_img} />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip message={user_summoner2_data.description}>
+                                                        <div className="summoner2">
+                                                            <img src={user_summoner2_img} />
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
+                                                <div className="perk width20">
+                                                    <Tooltip message={primary_perk_data.longDesc}>
+                                                        <div>
+                                                            <img src={primary_perk_img} />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip message={sub_perk_data_name}>
+                                                        <div className="sub_perk_image">
+                                                            <img src={sub_perk_category_img} />
+                                                        </div>
+                                                    </Tooltip>
+                                                </div>
                                             </div>
                                             <div className="MatchStatWrap">
-                                                <div>
-                                                    {user_win ? '승리' : '패배'}
-                                                </div>
-                                                <div className="game_time">
-                                                    {game_Duration}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="MyWrap flex">
-                                            <div className="MyChampionInfo">
-                                                <div className="MyChampionImage">
-                                                    <img src={user_Champion_img} />
-                                                </div>
-                                                <div>
-                                                    {user_champion_data.championName}
-                                                </div>
-                                            </div>
-                                            <div className="width20">
-                                                <div className="summoner1">
-                                                    <img src={user_summoner1_img} />
-                                                </div>
-                                                <div>
-                                                    <img src={user_summoner2_img} />
-                                                </div>
-                                            </div>
-                                            <div className="perk width20">
-                                                <div>
-                                                    <img src={primary_perk_img} />
-                                                </div>
-                                                <div className="sub_perk_image">
-                                                    <img src={sub_perk_category_img} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="MatchStatWrap">
-                                            {user_champion_data.kills}
-                                            /{user_champion_data.deaths}
-                                            /{user_champion_data.assists}
-                                            ({kda_data})
-                                        </div>
-                                        <div className="MyStatInfo">
-                                            <div>
                                                 {user_champion_data.kills}
                                                 /{user_champion_data.deaths}
                                                 /{user_champion_data.assists}
-                                                ({((user_champion_data.kills + user_champion_data.assists)
-                                                    / user_champion_data.deaths).toFixed(2)})
+                                                ({kda_data})
                                             </div>
-                                            <div>
-                                                레벨 : {user_champion_data.champLevel}
+                                            <div className="MyStatInfo">
+                                                <div>
+                                                    {user_champion_data.kills}
+                                                    /{user_champion_data.deaths}
+                                                    /{user_champion_data.assists}
+                                                    ({((user_champion_data.kills + user_champion_data.assists)
+                                                        / user_champion_data.deaths).toFixed(2)})
+                                                </div>
+                                                <div>
+                                                    레벨 : {user_champion_data.champLevel}
+                                                </div>
+                                                <div>
+                                                    CS : {user_champion_data.totalMinionsKilled
+                                                        + user_champion_data.neutralMinionsKilled}
+                                                </div>
+
                                             </div>
-                                            <div>
-                                                CS : {user_champion_data.totalMinionsKilled
-                                                    + user_champion_data.neutralMinionsKilled}
-                                            </div>
+                                            <div className="itemWrap">
+                                                {
+                                                    user_item_array.map((item, index) => {
 
-                                        </div>
-                                        <div className="itemWrap">
-                                            {
-                                                user_item_array.map((item, index) => {
+                                                        const item_image_data = item?.image;
+                                                        const item_name_html = "<item_title>" + item?.name + "</item_title><br>";
+                                                        const item_gold_html =
+                                                            "<item_gold>구매 가격 : " + item?.gold.total +
+                                                            " | 판매 가격 : " + item?.gold.sell +
+                                                            "<br>조합 가격 : " + item?.gold.base +
+                                                            "</item_gold><br>";
 
-                                                    const item_image_data = item?.image;
-                                                    let sprite_size = "240px 240px";
-                                                    const icon_size = 24;
 
-                                                    if (item == undefined) {
-                                                        console.log("UNDEF");
+                                                        let item_description = item?.description;
+
+                                                        item_description = item_name_html + item_description + item_gold_html;
+
+
+                                                        let sprite_size = "240px 240px";
+                                                        const icon_size = 24;
+
+                                                        if (item == undefined) {
+
+                                                            return (
+                                                                <div className="user_item">
+                                                                    <div
+                                                                        style={{
+                                                                            backgroundColor: 'beige',
+                                                                            width: icon_size + "px",
+                                                                            height: icon_size + "px",
+                                                                        }}>
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        }
+
+                                                        if (item_image_data?.sprite == 'item2.png')
+                                                            sprite_size = "240px 24px";
 
                                                         return (
                                                             <div className="user_item">
-                                                                <div
-                                                                    style={{
-                                                                        backgroundColor: 'beige',
-                                                                        width: icon_size + "px",
-                                                                        height: icon_size + "px",
-                                                                    }}>
+                                                                <Tooltip message={item_description}>
+                                                                    <div
+                                                                        style={{
+                                                                            backgroundImage: "url('/images/sprite/" + item_image_data.sprite + "')",
+                                                                            backgroundPositionX: -1 * icon_size * (item_image_data.x / 48),
+                                                                            backgroundPositionY: -1 * icon_size * (item_image_data.y / 48),
+                                                                            backgroundSize: sprite_size,
+                                                                            width: icon_size + "px",
+                                                                            height: icon_size + "px",
+                                                                        }}>
+                                                                    </div>
+                                                                </Tooltip>
+                                                            </div>
+                                                        )
+                                                    })
+                                                }
+                                            </div>
+                                            <div className="teamWrap width25">
+                                                <div className="team1 width50">
+                                                    {data.info.participants.map((user, index) => {
+
+                                                        const sprite = champion_image_array[index]?.sprite;
+                                                        let sprite_size = '180px 54px';
+
+                                                        if (sprite == "champion5.png") {
+                                                            sprite_size = '180px 18px'
+                                                        }
+
+                                                        if (index > 4) {
+                                                            return;
+                                                        }
+
+                                                        return (
+                                                            <div key={index + 100}>
+                                                                <div className="flex">
+                                                                    <div>
+                                                                        <div className="sub_champion_image"
+                                                                            style={{
+                                                                                backgroundImage: "url('/images/sprite/" + champion_image_array[index]?.sprite + "')",
+                                                                                backgroundSize: sprite_size,
+                                                                                backgroundPositionX: -18 * (champion_image_array[index].x / 48),
+                                                                                backgroundPositionY: -18 * (champion_image_array[index].y / 48),
+                                                                                width: "18px",
+                                                                                height: "18px",
+                                                                            }}>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="team_participants">
+                                                                        {index < 5 &&
+                                                                            user.summonerName}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         )
-                                                    }
+                                                    })}
+                                                </div>
+                                                <div className="team2 width50">
+                                                    {data.info.participants.map((user, index) => {
+                                                        const sprite = champion_image_array[index]?.sprite;
+                                                        let sprite_size = '180px 54px';
 
-                                                    if (item_image_data.sprite == 'item2.png')
-                                                        sprite_size = "240px 24px";
+                                                        if (sprite == "champion5.png") {
+                                                            sprite_size = '180px 18px'
+                                                        }
 
-                                                    return (
-                                                        <div className="user_item">
-                                                            <div
-                                                                style={{
-                                                                    backgroundImage: "url('/images/sprite/" + item_image_data.sprite + "')",
-                                                                    backgroundPositionX: -1 * icon_size * (item_image_data.x / 48),
-                                                                    backgroundPositionY: -1 * icon_size * (item_image_data.y / 48),
-                                                                    backgroundSize: sprite_size,
-                                                                    width: icon_size + "px",
-                                                                    height: icon_size + "px",
-                                                                }}>
+                                                        if (index < 5) {
+                                                            return;
+                                                        }
+                                                        return (
+                                                            <div key={index + 200}>
+                                                                <div className="flex team_participants">
+                                                                    <div>
+                                                                        <div className="sub_champion_image"
+                                                                            style={{
+                                                                                backgroundImage: "url('/images/sprite/" + champion_image_array[index]?.sprite + "')",
+                                                                                backgroundSize: sprite_size,
+                                                                                backgroundPositionX: -18 * (champion_image_array[index]?.x / 48),
+                                                                                backgroundPositionY: -18 * (champion_image_array[index]?.y / 48),
+                                                                                width: "18px",
+                                                                                height: "18px",
+                                                                            }}>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="team_participants">
+                                                                        {user.summonerName}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )
-                                                })
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <div onClick={() => detail_bar_handler(data.info.gameId)}>
+                                                {">"}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            {
+                                                get_Detail_Bar_Click &&
+                                                data.info.gameId == get_GameId &&
+                                                <div>
+                                                    <Detail_Data data={data} />
+                                                </div>
                                             }
                                         </div>
-                                        <div className="teamWrap width25">
-                                            <div className="team1 width50">
-                                                {data.info.participants.map((user, index) => {
-
-                                                    const sprite = champion_image_array[index].sprite;
-                                                    let sprite_size = '180px 54px';
-
-                                                    if (sprite == "champion5.png") {
-                                                        sprite_size = '180px 18px'
-                                                    }
-
-                                                    if (index > 4) {
-                                                        return;
-                                                    }
-
-                                                    return (
-                                                        <div key={index + 100}>
-                                                            <div className="flex">
-                                                                <div>
-                                                                    <div className="sub_champion_image"
-                                                                        style={{
-                                                                            backgroundImage: "url('/images/sprite/" + champion_image_array[index].sprite + "')",
-                                                                            backgroundSize: sprite_size,
-                                                                            backgroundPositionX: -18 * (champion_image_array[index].x / 48),
-                                                                            backgroundPositionY: -18 * (champion_image_array[index].y / 48),
-                                                                            width: "18px",
-                                                                            height: "18px",
-                                                                        }}>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="team_participants">
-                                                                    {index < 5 &&
-                                                                        user.summonerName}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                            <div className="team2 width50">
-                                                {data.info.participants.map((user, index) => {
-                                                    const sprite = champion_image_array[index].sprite;
-                                                    let sprite_size = '180px 54px';
-
-                                                    if (sprite == "champion5.png") {
-                                                        sprite_size = '180px 18px'
-                                                    }
-
-                                                    if (index < 5) {
-                                                        return;
-                                                    }
-                                                    return (
-                                                        <div key={index + 200}>
-                                                            <div className="flex team_participants">
-                                                                <div>
-                                                                    <div className="sub_champion_image"
-                                                                        style={{
-                                                                            backgroundImage: "url('/images/sprite/" + champion_image_array[index].sprite + "')",
-                                                                            backgroundSize: sprite_size,
-                                                                            backgroundPositionX: -18 * (champion_image_array[index].x / 48),
-                                                                            backgroundPositionY: -18 * (champion_image_array[index].y / 48),
-                                                                            width: "18px",
-                                                                            height: "18px",
-                                                                        }}>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="team_participants">
-                                                                    {user.summonerName}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
                                     </div>
-
                                 )
 
                             }) ?? "정보 없음"}
