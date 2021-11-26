@@ -1444,7 +1444,7 @@
                 "attackspeed": 0.625
             }
         },
-        "Fiddlesticks": {
+        "FiddleSticks": {
             "version": "11.23.1",
             "id": "Fiddlesticks",
             "key": "9",
@@ -1458,7 +1458,7 @@
                 "difficulty": 9
             },
             "image": {
-                "full": "Fiddlesticks.png",
+                "full": "FiddleSticks.png",
                 "sprite": "champion0.png",
                 "group": "champion",
                 "x": 432,

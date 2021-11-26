@@ -314,9 +314,9 @@ const Search_Data = (props) => {
                                                                 <Tooltip message={item_description}>
                                                                     <div
                                                                         style={{
-                                                                            backgroundImage: "url('/images/sprite/" + item_image_data.sprite + "')",
-                                                                            backgroundPositionX: -1 * icon_size * (item_image_data.x / 48),
-                                                                            backgroundPositionY: -1 * icon_size * (item_image_data.y / 48),
+                                                                            backgroundImage: "url('/images/sprite/" + item_image_data?.sprite + "')",
+                                                                            backgroundPositionX: -1 * icon_size * (item_image_data?.x / 48),
+                                                                            backgroundPositionY: -1 * icon_size * (item_image_data?.y / 48),
                                                                             backgroundSize: sprite_size,
                                                                             width: icon_size + "px",
                                                                             height: icon_size + "px",
@@ -351,8 +351,8 @@ const Search_Data = (props) => {
                                                                             style={{
                                                                                 backgroundImage: "url('/images/sprite/" + champion_image_array[index]?.sprite + "')",
                                                                                 backgroundSize: sprite_size,
-                                                                                backgroundPositionX: -18 * (champion_image_array[index].x / 48),
-                                                                                backgroundPositionY: -18 * (champion_image_array[index].y / 48),
+                                                                                backgroundPositionX: -18 * (champion_image_array[index]?.x / 48),
+                                                                                backgroundPositionY: -18 * (champion_image_array[index]?.y / 48),
                                                                                 width: "18px",
                                                                                 height: "18px",
                                                                             }}>

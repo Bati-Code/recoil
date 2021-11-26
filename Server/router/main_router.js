@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const riotAPI_Key = 'RGAPI-ff0c95fe-c54c-43ed-9b81-626e4de85d01';
+const riotAPI_Key = 'RGAPI-225a769e-2b26-4479-8db7-5aa58631244b';
 
 
 module.exports = (app) => {
@@ -86,9 +86,20 @@ module.exports = (app) => {
 
     })
 
-    app.get('/test', async (req, res) => {
+    app.post('/test', async (req, res) => {
 
-        res.json("AA");
+        const match_id = req.body.match_id;
+
+        await axios.get('https://asia.api.riotgames.com/lol/match/v5/matches/' + match_id + '/timeline',
+            {
+                headers: {
+                    'X-Riot-Token': riotAPI_Key,
+                }
+            })
+            .then((response) => {
+                res.json(response.data);
+            })
+
     })
 
 }
