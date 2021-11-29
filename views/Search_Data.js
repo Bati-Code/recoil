@@ -32,6 +32,8 @@ const Search_Data = (props) => {
     }, [props])
 
     const detail_bar_handler = (game_id) => {
+
+        const a = document.getElementById('detail_div');
         set_GameId(game_id);
         set_Detail_Bar_Click(!get_Detail_Bar_Click);
 
@@ -407,13 +409,14 @@ const Search_Data = (props) => {
                                                 {">"}
                                             </div>
                                         </div>
-                                        <div>
+                                        <div className={"detail " + (get_Detail_Bar_Click &&
+                                            data.info.gameId == get_GameId ? 'show'
+                                            : 'hide')}>
+
                                             {
                                                 get_Detail_Bar_Click &&
                                                 data.info.gameId == get_GameId &&
-                                                <div>
-                                                    <Detail_Data data={data} />
-                                                </div>
+                                                <Detail_Data data={data} />
                                             }
                                         </div>
                                     </div>

@@ -44,6 +44,21 @@
 .width15 {
     width: 15%;
 }
+.detail{
+    transition: height 1s;
+    overflow: auto;
+}
+.detail.show{
+    display: block;
+    height: 978px;
+}
+
+.detail.hide{
+    height: 0px;
+    * {
+        display: none;
+    }
+}
 
 .custom_tooltip_container{
     position: relative;

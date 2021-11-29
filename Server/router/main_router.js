@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const riotAPI_Key = 'RGAPI-225a769e-2b26-4479-8db7-5aa58631244b';
+const riotAPI_Key = 'RGAPI-d39ce0a3-c76c-41da-8eab-2761a404b8e7';
 
 
 module.exports = (app) => {
