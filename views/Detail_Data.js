@@ -2,14 +2,21 @@ import axios from 'axios';
 import React, { useEffect } from 'react'
 import { useState } from 'react';
 import championData from '../public/json_data/champion.json'
+import MapData from '../public/json_data/map.json'
 
 import * as ECharts from 'echarts';
+import Modal from 'antd/lib/modal/Modal';
+import { Button } from 'antd';
+import { Tabs } from 'antd';
+
+
+const { TabPane } = Tabs;
 
 const Detail_Data = (props) => {
 
-    const [get_deal_data, set_deal_data] = useState(false);
-    const [get_dpd_data, set_dpd_data] = useState(false);
-    const [get_tpd_data, set_tpd_data] = useState(false);
+    const [get_visible, set_visible] = useState(false);
+    const [get_Map_Data, set_Map_Data] = useState({});
+    const [get_Kill_Data, set_Kill_Data] = useState([]);
 
     const Make_Detail_Data = ({ team, key_data, wanted_data }) => {
         let team1_array = [];
@@ -124,7 +131,7 @@ const Detail_Data = (props) => {
                                             }}>
                                         </div>
                                         <div className={team + "_bar"}
-                                            style={{ width: (team1_player_deaL_data[key_data + "_avg"] * 0.9) + "%" }}>
+                                            style={{ width: (team1_player_deaL_data[key_data + "_avg"] * 0.92) + "%" }}>
                                             <div className="deal_text">
                                                 {team1_player_deaL_data[key_data]}{team1_player_deaL_data.death != undefined && "(" + team1_player_deaL_data.death + ")"}
                                             </div>
@@ -137,154 +144,249 @@ const Detail_Data = (props) => {
                 </div>
             </>
         )
-
     }
 
     const Init_Charts = async () => {
 
+        const newPromise = new Promise((resolve) => {
+            resolve();
+        })
 
+        newPromise.then(async () => {
+            ECharts.dispose(document.getElementById('chart_div'));
+            let data = '';
+            await axios.post('http://localhost:9900/test',
+                {
+                    match_id: props.data.metadata.matchId
+                })
+                .then((response) => {
+                    data = response.data;
+                })
+
+            console.log("TimeLine_Data : ", data);
+
+            let users = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+            let chart_dataSet = [['user', 'time', 'gold']];
+            let datasetWithFilters = [];
+            let seriesList = [];
+
+            data.info.frames.map((time, index) => {
+                for (let i = 1; i < 11; i++) {
+                    chart_dataSet.push([i, index, time.participantFrames[i].totalGold]);
+                }
+            })
+
+            ECharts.util.each(users, (user) => {
+                let datasetId = 'dataset_' + user + 'user';
+
+                datasetWithFilters.push({
+                    id: datasetId,
+                    fromDatasetId: 'dataset_raw',
+                    transform: {
+                        type: 'filter',
+                        config: {
+                            dimension: 'user',
+                            '=': user
+                        }
+                    }
+                })
+
+                seriesList.push({
+                    type: 'line',
+                    datasetId: datasetId,
+                    showSymbol: false,
+                    name: user,
+                    endLabel: {
+                        show: true,
+                        formatter: (params) => {
+                            const championName = props.data.info.participants[params.value[0] - 1].championName;
+                            const championName_ko = championData.data[championName].name + " : "
+                                + params.value[2] + "Gold";
+
+                            return (
+                                championName_ko
+                            )
+                        }
+                    },
+                    labelLayout: {
+                        moveOverlap: 'shiftY'
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    encode: {
+                        x: 'time',
+                        y: 'gold',
+                    }
+                })
+            })
+
+            const gold_chart = ECharts.init(document.getElementById('chart_div'));
+            gold_chart.setOption({
+                animationDuration: 10000,
+                dataset: [{
+                    id: 'dataset_raw',
+                    source: chart_dataSet
+                },
+                ...datasetWithFilters],
+                title: { text: '골드' },
+                label: ['gold'],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: (params) => {
+                        let tooltip_String = '';
+
+                        for (let i = 0; i < 10; i++) {
+                            const championName = props.data.info.participants[i].championName;
+                            const champion_Image_Data = championData.data[championName].image;
+
+                            const one_sprite_size = 18;
+                            let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                            if (champion_Image_Data?.sprite == "champion5.png")
+                                sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                            "<span style=\"display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:#91cc75;\"></span>"
+                            tooltip_String = tooltip_String +
+                                params[i].marker + " " +
+                                '<div ' +
+                                'style="background-image:url(' + "'/images/sprite/" + champion_Image_Data?.sprite + "');" +
+                                "background-size:" + sprite_size + ";" +
+                                "background-position-x:" + -one_sprite_size * (champion_Image_Data?.x / 48) + "px;" +
+                                "background-position-y:" + -one_sprite_size * (champion_Image_Data?.y / 48) + "px;" +
+                                "width:" + one_sprite_size + "px;" +
+                                "height:" + one_sprite_size + "px;" +
+                                "display:inline-block" +
+                                '"></div>'
+                                + " : " + params[i].value[2] + "Gold" + "<br>";
+                        }
+
+                        return tooltip_String;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                series: seriesList,
+            })
+        })
+    }
+
+    const Map_Data = async () => {
+        //map x,y = 14000
         let data = '';
+        let kill_time_line_array = [];
+        let map_data = MapData.data[props.data.info.mapId];
+
         await axios.post('http://localhost:9900/test',
             {
                 match_id: props.data.metadata.matchId
             })
             .then((response) => {
-                console.log(response.data);
                 data = response.data;
+                console.log(data);
             })
-
-        console.log("TimeLine_Data : ", data);
-
-        let users = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-        let chart_dataSet = [['user', 'time', 'gold']];
-        let datasetWithFilters = [];
-        let seriesList = [];
 
         data.info.frames.map((time, index) => {
-            for (let i = 1; i < 11; i++) {
-                chart_dataSet.push([i, index, time.participantFrames[i].totalGold]);
-            }
+
+            let find_data = time.events.filter((e) => e.type == 'CHAMPION_KILL');
+            if (find_data.length != 0)
+                kill_time_line_array.push({ kill: find_data, time: index });
         })
 
-        ECharts.util.each(users, (user) => {
-            let datasetId = 'dataset_' + user + 'user';
+        console.log(kill_time_line_array);
 
-            datasetWithFilters.push({
-                id: datasetId,
-                fromDatasetId: 'dataset_raw',
-                transform: {
-                    type: 'filter',
-                    config: {
-                        dimension: 'user',
-                        '=': user
-                    }
-                }
-            })
-
-            seriesList.push({
-                type: 'line',
-                datasetId: datasetId,
-                showSymbol: false,
-                name: user,
-                endLabel: {
-                    show: true,
-                    formatter: (params) => {
-                        const championName = props.data.info.participants[params.value[0] - 1].championName;
-                        const championName_ko = championData.data[championName].name;
-
-                        return (
-                            championName_ko
-                        )
-                    }
-                },
-                labelLayout: {
-                    moveOverlap: 'shiftY'
-                },
-                emphasis: {
-                    focus: 'series'
-                },
-                encode: {
-                    x: 'time',
-                    y: 'gold',
-                    label: ['user', 'gold'],
-                    itemName: 'Time',
-                    tooltip: ['gold']
-                }
-            })
-        })
-
-        console.log("Chart_DataSet : ", chart_dataSet);
-
-        const gold_chart = ECharts.init(document.getElementById('chart_div'));
-        gold_chart.setOption({
-            animationDuration: 10000,
-            dataset: [{
-                id: 'dataset_raw',
-                source: chart_dataSet
-            },
-            ...datasetWithFilters],
-            title: { text: '골드' },
-            tooltip: {
-                trigger: 'axis'
-            },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false
-            },
-            yAxis: {
-                type: 'value',
-            },
-            series: seriesList,
-        })
+        set_Kill_Data(kill_time_line_array);
+        set_Map_Data(map_data);
     }
 
     useEffect(() => {
-        Init_Charts();
     }, [])
+
+
+    const Tab_Change_Handler = (key) => {
+        console.log(key);
+        if (key == 'detail_graph') {
+            Init_Charts();
+        }
+        else if (key == 'detail_map') {
+            Map_Data();
+        }
+    }
 
     return (
         <>
-            <div className="detail_data_main">
-                <div>
+            <Tabs defaultActiveKey="1" onChange={Tab_Change_Handler}>
+                <TabPane tab="상세 정보" key="detail_bar">
+                    <div className="detail_data_main">
+                        <div>
+                            <div>
+                                적 챔피언에게 가한 피해량
+                            </div>
+                            <div className="flex width100">
+                                <Make_Detail_Data team='team1' key_data='deal' wanted_data={[]} />
+                                <Make_Detail_Data team='team2' key_data='deal' wanted_data={[]} />
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                DPD - 데스 당 적 챔피언에게 가한 피해량
+                            </div>
+                            <div className="flex width100">
+                                <Make_Detail_Data team='team1' key_data='dpd' wanted_data={['deal', 'death']} />
+                                <Make_Detail_Data team='team2' key_data='dpd' wanted_data={['deal', 'death']} />
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                받은 피해량
+                            </div>
+                            <div className="flex width100">
+                                <Make_Detail_Data team='team1' key_data='damageTaken' wanted_data={[]} />
+                                <Make_Detail_Data team='team2' key_data='damageTaken' wanted_data={[]} />
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                DTPD - 데스 당 받은 피해량
+                            </div>
+                            <div className="flex width100">
+                                <Make_Detail_Data team='team1' key_data='dtpd' wanted_data={['death']} />
+                                <Make_Detail_Data team='team2' key_data='dtpd' wanted_data={['death']} />
+                            </div>
+                        </div>
+                    </div>
+                </TabPane>
+                <TabPane tab="그래프" key="detail_graph">
                     <div>
-                        적 챔피언에게 가한 피해량
+                        그래프
                     </div>
-                    <div className="flex width100">
-                        <Make_Detail_Data team='team1' key_data='deal' wanted_data={[]} />
-                        <Make_Detail_Data team='team2' key_data='deal' wanted_data={[]} />
-                    </div>
-                </div>
-                <div>
+                    <div id="chart_div" style={{ width: '700px', height: '800px' }} />
+                </TabPane>
+                <TabPane tab="맵" key="detail_map">
                     <div>
-                        DPD - 데스 당 적 챔피언에게 가한 피해량
+                        맵
                     </div>
-                    <div className="flex width100">
-                        <Make_Detail_Data team='team1' key_data='dpd' wanted_data={['deal', 'death']} />
-                        <Make_Detail_Data team='team2' key_data='dpd' wanted_data={['deal', 'death']} />
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        받은 피해량
-                    </div>
-                    <div className="flex width100">
-                        <Make_Detail_Data team='team1' key_data='damageTaken' wanted_data={[]} />
-                        <Make_Detail_Data team='team2' key_data='damageTaken' wanted_data={[]} />
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        DTPD - 데스 당 받은 피해량
-                    </div>
-                    <div className="flex width100">
-                        <Make_Detail_Data team='team1' key_data='dtpd' wanted_data={['death']} />
-                        <Make_Detail_Data team='team2' key_data='dtpd' wanted_data={['death']} />
-                    </div>
-                </div>
-                <div id="chart_div" style={{ width: '600px', height: '1000px' }}>
-
-                </div>
-            </div>
+                        <div style={{
+                            backgroundImage: "url('/images/map/" + get_Map_Data?.image?.full + "')",
+                            backgroundSize: '700px 700px',
+                            width: '700px',
+                            height: '700px',
+                            position: 'relative',
+                            zIndex: '99999'
+                        }}>
+                            <div>
+                                aaa
+                            </div>
+                        </div>
+                </TabPane>
+            </Tabs>
         </>
     )
 }
