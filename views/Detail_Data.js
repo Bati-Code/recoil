@@ -6,8 +6,10 @@ import MapData from '../public/json_data/map.json'
 
 import * as ECharts from 'echarts';
 import Modal from 'antd/lib/modal/Modal';
-import { Button } from 'antd';
+import { Button, Tooltip } from 'antd';
 import { Tabs } from 'antd';
+import h337 from 'heatmap.js';
+
 
 
 const { TabPane } = Tabs;
@@ -17,6 +19,8 @@ const Detail_Data = (props) => {
     const [get_visible, set_visible] = useState(false);
     const [get_Map_Data, set_Map_Data] = useState({});
     const [get_Kill_Data, set_Kill_Data] = useState([]);
+    const [get_Temp_Kill_Data, set_Temp_Kill_Data] = useState([]);
+    const [get_time, set_time] = useState(0);
 
     const Make_Detail_Data = ({ team, key_data, wanted_data }) => {
         let team1_array = [];
@@ -79,9 +83,6 @@ const Detail_Data = (props) => {
         result_array1.sort((a, b) => { return a.index - b.index });
         result_array2.sort((a, b) => { return a.index - b.index });
 
-        console.log("death : ", result_array1.death);
-
-
         let deal_data = { team1: result_array1, team2: result_array2 };
 
         return (
@@ -115,7 +116,6 @@ const Detail_Data = (props) => {
                             let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
                             if (champion_Image_Data?.sprite == "champion5.png")
                                 sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
-
 
                             return (
                                 <div key={player.summonerName + "totalDamageDealtToChampions"}>
@@ -282,6 +282,7 @@ const Detail_Data = (props) => {
         //map x,y = 14000
         let data = '';
         let kill_time_line_array = [];
+        let position_array = [];
         let map_data = MapData.data[props.data.info.mapId];
 
         await axios.post('http://localhost:9900/test',
@@ -296,18 +297,46 @@ const Detail_Data = (props) => {
         data.info.frames.map((time, index) => {
 
             let find_data = time.events.filter((e) => e.type == 'CHAMPION_KILL');
+            let find_position = {};
+            find_position.x = (time.participantFrames[1].position.x * 700) / 1500;
+            find_position.y = (time.participantFrames[1].position.y * 700) / 1500;
+            find_position.value = 3;
+
             if (find_data.length != 0)
                 kill_time_line_array.push({ kill: find_data, time: index });
+            if (find_position)
+                position_array.push(find_position);
         })
 
-        console.log(kill_time_line_array);
+        console.log("ARR : ", kill_time_line_array, " Heat Map : ", position_array);
 
-        set_Kill_Data(kill_time_line_array);
+        const heatmap = h337.create({
+            container: document.getElementsByClassName('minimap_div').item(0)
+        });
+
+        heatmap.setData({
+            max: 5,
+            data: position_array
+        })
+
+        set_Kill_Data([kill_time_line_array[0]]);
+        set_Temp_Kill_Data(kill_time_line_array);
         set_Map_Data(map_data);
+        set_time(1);
     }
 
     useEffect(() => {
-    }, [])
+        if (get_time > 0 && get_time < get_Temp_Kill_Data.length) {
+            setTimeout(() => {
+                let arr = [];
+                arr.push(...get_Kill_Data);
+                arr.push(get_Temp_Kill_Data[get_time]);
+                console.log("ARRrrr : ", arr);
+                set_Kill_Data(arr);
+                set_time(get_time + 1);
+            }, 1000);
+        }
+    }, [get_time])
 
 
     const Tab_Change_Handler = (key) => {
@@ -373,18 +402,162 @@ const Detail_Data = (props) => {
                     <div>
                         맵
                     </div>
-                        <div style={{
+                    <div className="minimap_div"
+                        style={{
                             backgroundImage: "url('/images/map/" + get_Map_Data?.image?.full + "')",
                             backgroundSize: '700px 700px',
                             width: '700px',
                             height: '700px',
                             position: 'relative',
-                            zIndex: '99999'
+                            zIndex: '100'
                         }}>
-                            <div>
-                                aaa
-                            </div>
-                        </div>
+                        {
+                            get_Kill_Data.map((item, index) => {
+
+                                const data = item.kill.map((kill, index) => {
+
+                                    let map_size = 15000;
+                                    if (get_Map_Data.MapId == 12)
+                                        map_size = 14000;
+
+                                    const kill_position_x = (kill.position.x / map_size) * 100;
+                                    const kill_position_y = (kill.position.y / map_size) * 100;
+
+                                    let team_color = '#bb0e0e';
+
+                                    let killer_ID = kill.killerId;
+                                    if (killer_ID == 0)
+                                        killer_ID = 1;
+
+                                    if (killer_ID < 6) {
+                                        team_color = '#0084ff';
+                                    }
+
+                                    const champion_Name = props.data.info.participants[killer_ID - 1].championName;
+                                    const champion_Image_Data = championData.data[champion_Name].image;
+
+                                    const victim_champion_Name = props.data.info.participants[kill.victimId - 1].championName;
+                                    const victim_champion_Image_Data = championData.data[victim_champion_Name].image;
+
+
+                                    const one_sprite_size = 18;
+
+                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                    let victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                    if (champion_Image_Data?.sprite == "champion5.png")
+                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+                                    if (victim_champion_Image_Data?.sprite == "champion5.png")
+                                        victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                                    const ToolTip_Data = () => {
+
+                                        return (
+                                            <>
+                                                <div>
+                                                    KILL
+                                                    <div className="flex spaceevenly">
+                                                        <div key={(item.time * 100) + index + "kill"}
+                                                            style={{
+                                                                backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                backgroundSize: sprite_size,
+                                                                backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                width: one_sprite_size + 'px',
+                                                                height: one_sprite_size + 'px',
+                                                            }}>
+                                                        </div>
+                                                        <br />
+                                                        <div
+                                                            style={{
+                                                                backgroundImage: "url('https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-match-history/global/default/kills.png')",
+                                                                backgroundSize: '18px 18px',
+                                                                width: one_sprite_size + 'px',
+                                                                height: one_sprite_size + 'px',
+                                                            }}>
+                                                        </div>
+                                                        <br />
+                                                        <div key={(item.time * 100) + index + "victim"}
+                                                            style={{
+                                                                backgroundImage: "url('/images/sprite/" + victim_champion_Image_Data?.sprite + "')",
+                                                                backgroundSize: victim_sprite_size,
+                                                                backgroundPositionX: -one_sprite_size * (victim_champion_Image_Data?.x / 48),
+                                                                backgroundPositionY: -one_sprite_size * (victim_champion_Image_Data?.y / 48),
+                                                                width: one_sprite_size + 'px',
+                                                                height: one_sprite_size + 'px',
+                                                            }}>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {kill.assistingParticipantIds &&
+                                                    <div>
+                                                        ASSIST
+                                                        <div className="flex">
+                                                            {
+                                                                kill.assistingParticipantIds.map((assist, index) => {
+                                                                    const champion_Name = props.data.info.participants[assist - 1].championName;
+                                                                    const champion_Image_Data = championData.data[champion_Name].image;
+
+                                                                    const one_sprite_size = 18;
+
+                                                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                                                    if (champion_Image_Data?.sprite == "champion5.png")
+                                                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                                                                    return (
+                                                                        <>
+                                                                            <div key={(item.time * 100) + index + "assist" + (assist * 9)}
+                                                                                style={{
+                                                                                    backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                                    backgroundSize: sprite_size,
+                                                                                    backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                                    backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                                    width: one_sprite_size + 'px',
+                                                                                    height: one_sprite_size + 'px',
+                                                                                }} />
+                                                                        </>
+                                                                    )
+                                                                })}
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                            </>
+                                        )
+                                    }
+
+
+                                    return (
+                                        <Tooltip title={ToolTip_Data} placement="top" key={(item.time * 100) + index + "tooltip"}>
+                                            <div key={(item.time * 100) + index}
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: kill_position_x + "%",
+                                                    bottom: kill_position_y + "%",
+                                                    borderRadius: '100%',
+                                                    border: '0.8px solid',
+                                                    borderColor: team_color
+                                                }}>
+                                                <div
+                                                    style={{
+
+                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                        backgroundSize: sprite_size,
+                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                        width: one_sprite_size + 'px',
+                                                        height: one_sprite_size + 'px',
+                                                        borderRadius: '100%',
+                                                    }}>
+                                                </div>
+                                            </div>
+                                        </Tooltip>
+                                    )
+                                })
+
+                                return (data)
+                            })
+                        }
+                    </div>
                 </TabPane>
             </Tabs>
         </>

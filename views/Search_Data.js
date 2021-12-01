@@ -215,8 +215,8 @@ const Search_Data = (props) => {
                                             </div>
                                             <div className="MyWrap flex">
                                                 <div className="MyChampionInfo">
-                                                    <Tooltip message={user_Champion_ko_data.blurb}>
-                                                        <div className="MyChampionImage">
+                                                    <Tooltip message={user_Champion_ko_data.blurb} childNode='MyChampionImage'>
+                                                        <div className="MyChampionImage" id="MyChampionImage">
                                                             <img src={user_Champion_img} />
                                                         </div>
                                                     </Tooltip>
@@ -225,24 +225,24 @@ const Search_Data = (props) => {
                                                     </div>
                                                 </div>
                                                 <div className="width20">
-                                                    <Tooltip message={user_summoner1_data.description}>
+                                                    <Tooltip message={user_summoner1_data.description} childNode='summoner1'>
                                                         <div className="summoner1">
                                                             <img src={user_summoner1_img} />
                                                         </div>
                                                     </Tooltip>
-                                                    <Tooltip message={user_summoner2_data.description}>
+                                                    <Tooltip message={user_summoner2_data.description} childNode='summoner2'>
                                                         <div className="summoner2">
                                                             <img src={user_summoner2_img} />
                                                         </div>
                                                     </Tooltip>
                                                 </div>
                                                 <div className="perk width20">
-                                                    <Tooltip message={primary_perk_data.longDesc}>
-                                                        <div>
+                                                    <Tooltip message={primary_perk_data.longDesc} childNode='primary_perk'>
+                                                        <div className="primary_perk">
                                                             <img src={primary_perk_img} />
                                                         </div>
                                                     </Tooltip>
-                                                    <Tooltip message={sub_perk_data_name}>
+                                                    <Tooltip message={sub_perk_data_name} childNode='sub_perk_image'>
                                                         <div className="sub_perk_image">
                                                             <img src={sub_perk_category_img} />
                                                         </div>
@@ -313,8 +313,9 @@ const Search_Data = (props) => {
 
                                                         return (
                                                             <div className="user_item">
-                                                                <Tooltip message={item_description}>
+                                                                <Tooltip message={item_description} childNode='item_image'>
                                                                     <div
+                                                                        className="item_image"
                                                                         style={{
                                                                             backgroundImage: "url('/images/sprite/" + item_image_data?.sprite + "')",
                                                                             backgroundPositionX: -1 * icon_size * (item_image_data?.x / 48),
