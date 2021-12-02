@@ -35,7 +35,13 @@ const Search_Data = (props) => {
 
         const a = document.getElementById('detail_div');
         set_GameId(game_id);
-        set_Detail_Bar_Click(!get_Detail_Bar_Click);
+        if (get_GameId == game_id) {
+            set_Detail_Bar_Click(false);
+            set_GameId('');
+        }
+        else {
+            set_Detail_Bar_Click(true);
+        }
 
     }
 
@@ -86,18 +92,20 @@ const Search_Data = (props) => {
                         <div className="width70">
                             {getSummonerBasicData?.Summoner_Match_Data?.map((data, index) => {
 
-                                console.log("DATA : ", getSummonerBasicData);
+                                console.log("DATA : ", data, getSummonerBasicData);
                                 const user_index =
                                     data.info.participants.findIndex(
-                                        (element) => element.summonerName === getSummonerBasicData?.Summoner_Basic_Data?.name
+                                        (element) => element.summonerId === getSummonerBasicData?.Summoner_Basic_Data?.id
                                     );
 
-                                const user_champion_data = data.info.participants[user_index];
+                                const user_champion_data = data?.info?.participants[user_index];
+
+                                console.log("user_champion_data : ", user_champion_data, "index : ", user_index);
 
                                 //유저 챔피언
-                                const user_Champion_ko_data = Champion_Data.data[user_champion_data.championName];
+                                const user_Champion_ko_data = Champion_Data.data[user_champion_data?.championName];
                                 const user_Champion_img = 'http://ddragon.leagueoflegends.com/cdn/11.23.1/img/'
-                                    + 'champion/' + user_champion_data.championName + '.png';
+                                    + 'champion/' + user_champion_data?.championName + '.png';
 
                                 console.log("Each_Data : ", data);
 
@@ -120,7 +128,7 @@ const Search_Data = (props) => {
                                 }
 
                                 //승패
-                                const user_win = user_champion_data.win;
+                                const user_win = user_champion_data?.win;
 
                                 //게임 타입
                                 let game_type = '';
@@ -130,19 +138,19 @@ const Search_Data = (props) => {
                                     game_type = "칼바람나락";
 
                                 //KDA
-                                let kda_data = ((user_champion_data.kills + user_champion_data.assists)
-                                    / user_champion_data.deaths).toFixed(2);
+                                let kda_data = ((user_champion_data?.kills + user_champion_data?.assists)
+                                    / user_champion_data?.deaths).toFixed(2);
 
-                                if (user_champion_data.deaths == 0)
+                                if (user_champion_data?.deaths == 0)
                                     kda_data = "perfect";
 
 
                                 //스펠
                                 const user_summoner1 = Object.keys(Summoner_Data.data).filter(e => {
-                                    return Summoner_Data.data[e].key == user_champion_data.summoner1Id;
+                                    return Summoner_Data.data[e].key == user_champion_data?.summoner1Id;
                                 });
                                 const user_summoner2 = Object.keys(Summoner_Data.data).filter(e => {
-                                    return Summoner_Data.data[e].key == user_champion_data.summoner2Id;
+                                    return Summoner_Data.data[e].key == user_champion_data?.summoner2Id;
                                 });
 
                                 const user_summoner1_data = Summoner_Data.data[user_summoner1[0]];
@@ -155,25 +163,25 @@ const Search_Data = (props) => {
 
 
                                 //특성
-                                const get_user_primary_perk_category = user_champion_data.perks.styles[0];
-                                const get_user_primary_perk = get_user_primary_perk_category.selections[0];
-                                const get_user_sub_perk_category = user_champion_data.perks.styles[1];
+                                const get_user_primary_perk_category = user_champion_data?.perks.styles[0];
+                                const get_user_primary_perk = get_user_primary_perk_category?.selections[0];
+                                const get_user_sub_perk_category = user_champion_data?.perks.styles[1];
 
 
                                 const find_primary_perk_category = Perk_Data.filter(e =>
-                                    e.id == get_user_primary_perk_category.style)[0];
+                                    e.id == get_user_primary_perk_category?.style)[0];
                                 const find_sub_category = Perk_Data.filter(e =>
-                                    e.id == get_user_sub_perk_category.style)[0];
+                                    e.id == get_user_sub_perk_category?.style)[0];
 
 
-                                const find_primary_perk_main = find_primary_perk_category.slots[0].runes.filter(e =>
-                                    e.id == get_user_primary_perk.perk);
+                                const find_primary_perk_main = find_primary_perk_category?.slots[0].runes.filter(e =>
+                                    e.id == get_user_primary_perk?.perk);
 
                                 const primary_perk_img = '/images/' + find_primary_perk_main[0].icon;
-                                const sub_perk_category_img = '/images/' + find_sub_category.icon;
+                                const sub_perk_category_img = '/images/' + find_sub_category?.icon;
 
                                 const primary_perk_data = find_primary_perk_main[0];
-                                const sub_perk_data_name = find_sub_category.name;
+                                const sub_perk_data_name = find_sub_category?.name;
 
                                 //아이템
                                 let user_item_array = [];
@@ -200,12 +208,12 @@ const Search_Data = (props) => {
                                 return (
                                     <div>
                                         <div key={index} className="MatchWrap" id={user_win ? 'Match_true' : 'Match_false'}>
-                                            <div>
+                                            <div className="MatchType">
                                                 <div>
                                                     {game_type}
                                                 </div>
                                                 <div className="MatchStatWrap">
-                                                    <div>
+                                                    <div className={user_win ? 'win' : 'defeat'}>
                                                         {user_win ? '승리' : '패배'}
                                                     </div>
                                                     <div className="game_time">
@@ -250,19 +258,16 @@ const Search_Data = (props) => {
                                                 </div>
                                             </div>
                                             <div className="MatchStatWrap">
-                                                {user_champion_data.kills}
-                                                /{user_champion_data.deaths}
-                                                /{user_champion_data.assists}
-                                                ({kda_data})
+                                                <div>
+                                                    {user_champion_data.kills + " / "}
+                                                    {user_champion_data.deaths + " / "}
+                                                    {user_champion_data.assists}
+                                                </div>
+                                                <div>
+                                                    {kda_data} KDA
+                                                </div>
                                             </div>
                                             <div className="MyStatInfo">
-                                                <div>
-                                                    {user_champion_data.kills}
-                                                    /{user_champion_data.deaths}
-                                                    /{user_champion_data.assists}
-                                                    ({((user_champion_data.kills + user_champion_data.assists)
-                                                        / user_champion_data.deaths).toFixed(2)})
-                                                </div>
                                                 <div>
                                                     레벨 : {user_champion_data.champLevel}
                                                 </div>
@@ -299,7 +304,7 @@ const Search_Data = (props) => {
                                                                 <div className="user_item">
                                                                     <div
                                                                         style={{
-                                                                            backgroundColor: 'beige',
+                                                                            backgroundColor: '#dbdbdb',
                                                                             width: icon_size + "px",
                                                                             height: icon_size + "px",
                                                                         }}>
@@ -417,7 +422,10 @@ const Search_Data = (props) => {
                                             {
                                                 get_Detail_Bar_Click &&
                                                 data.info.gameId == get_GameId &&
-                                                <Detail_Data data={data} />
+                                                <Detail_Data
+                                                    data={data}
+                                                    userID={getSummonerBasicData?.Summoner_Basic_Data?.id}
+                                                />
                                             }
                                         </div>
                                     </div>

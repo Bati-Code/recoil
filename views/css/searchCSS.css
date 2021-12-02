@@ -1,3 +1,6 @@
+.search_wrap{
+    margin-bottom: 10px;
+}
 .userInfoWrap{
     display: flex;
     flex-direction: row;
@@ -34,6 +37,10 @@
     background-color: #e2b6b3;
 }
 
+.MatchWrap .MatchType{
+    font-size: 11px;
+}
+
 .MatchWrap .MyWrap{
     align-items: center;
     width: 170px;
@@ -68,6 +75,7 @@
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
+    font-weight: 600;
 }
 
 .MatchWrap .MatchStatWrap .game_time{
@@ -138,4 +146,9 @@ img {
 
 .deal_text{
     margin-top: 5px;
+}
+
+.champ_select_div{
+    margin-bottom: 10px;
+    align-items: center;
 }

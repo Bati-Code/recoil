@@ -18,9 +18,20 @@ const Detail_Data = (props) => {
 
     const [get_visible, set_visible] = useState(false);
     const [get_Map_Data, set_Map_Data] = useState({});
+    const [get_TimeLine_Data, set_TimeLine_Data] = useState([]);
+
+
     const [get_Kill_Data, set_Kill_Data] = useState([]);
+    const [get_HeatMap, set_HeatMap] = useState('init');
+    const [get_HeatMap_Data, set_HeatMap_Data] = useState([]);
+    const [get_Temp_HeatMap_Data, set_Temp_HeatMap_Data] = useState([]);
     const [get_Temp_Kill_Data, set_Temp_Kill_Data] = useState([]);
     const [get_time, set_time] = useState(0);
+    const [get_trigger, set_trigger] = useState(0);
+
+    const [get_time_out, set_time_out] = useState('');
+
+
 
     const Make_Detail_Data = ({ team, key_data, wanted_data }) => {
         let team1_array = [];
@@ -278,8 +289,51 @@ const Detail_Data = (props) => {
         })
     }
 
+    const Init_Map_Canvas = () => {
+        clearTimeout(get_time_out);
+        let cnvs = document.getElementsByClassName('heatmap-canvas').item(0);
+        if (cnvs) {
+            const ctx = cnvs.getContext('2d');
+            ctx.clearRect(0, 0, cnvs.width, cnvs.height);
+            ctx.beginPath();
+        }
+    }
+
+    const Make_Selected_Data = (participants) => {
+
+        let kill_time_line_array = [];
+        let position_array = [];
+
+        Init_Map_Canvas();
+        console.log("START");
+
+        get_TimeLine_Data.info.frames.map((time, index) => {
+
+            let find_data = time.events.filter((e) => e.type == 'CHAMPION_KILL' && e.killerId == participants + 1);
+            let find_position = {};
+            find_position.x = ((time.participantFrames[participants + 1].position.x * 700) / 15000).toFixed(0);
+            find_position.y = 700 - ((time.participantFrames[participants + 1].position.y * 700) / 15000).toFixed(0);
+            find_position.value = 5;
+            find_position.radius = 70;
+
+            kill_time_line_array.push({ kill: find_data, time: index });
+            if (find_position)
+                position_array.push(find_position);
+        })
+
+        set_Kill_Data([kill_time_line_array[0]]);
+        set_Temp_Kill_Data(kill_time_line_array);
+        set_HeatMap_Data([position_array[0]]);
+        set_Temp_HeatMap_Data(position_array);
+        set_time(1);
+        set_trigger(get_trigger + 1);
+        console.log("END");
+    }
+
+
     const Map_Data = async () => {
         //map x,y = 14000
+        Init_Map_Canvas();
         let data = '';
         let kill_time_line_array = [];
         let position_array = [];
@@ -292,61 +346,99 @@ const Detail_Data = (props) => {
             .then((response) => {
                 data = response.data;
                 console.log(data);
+                set_TimeLine_Data(response.data);
             })
 
         data.info.frames.map((time, index) => {
 
+            const user_index = props.data.info.participants.findIndex(
+                (element) => element.summonerId === props.userID
+            );
+
+            console.log("INDEX : ", user_index)
+
             let find_data = time.events.filter((e) => e.type == 'CHAMPION_KILL');
             let find_position = {};
-            find_position.x = (time.participantFrames[1].position.x * 700) / 1500;
-            find_position.y = (time.participantFrames[1].position.y * 700) / 1500;
-            find_position.value = 3;
+            find_position.x = ((time.participantFrames[user_index + 1].position.x * 700) / 15000).toFixed(0);
+            find_position.y = 700 - ((time.participantFrames[user_index + 1].position.y * 700) / 15000).toFixed(0);
+            find_position.value = 5;
+            find_position.radius = 70;
 
-            if (find_data.length != 0)
-                kill_time_line_array.push({ kill: find_data, time: index });
+            kill_time_line_array.push({ kill: find_data, time: index });
             if (find_position)
                 position_array.push(find_position);
         })
 
         console.log("ARR : ", kill_time_line_array, " Heat Map : ", position_array);
 
-        const heatmap = h337.create({
+        let heatmap = h337.create({
             container: document.getElementsByClassName('minimap_div').item(0)
         });
 
+        console.log("PRops : ", props.data);
+        set_HeatMap(heatmap);
+
+
         heatmap.setData({
-            max: 5,
-            data: position_array
+            max: 7,
+            data: [position_array[0]]
         })
 
         set_Kill_Data([kill_time_line_array[0]]);
         set_Temp_Kill_Data(kill_time_line_array);
-        set_Map_Data(map_data);
+        set_HeatMap_Data([position_array[0]]);
+        set_Temp_HeatMap_Data(position_array);
         set_time(1);
+        set_trigger(get_trigger + 1);
+
+        set_Map_Data(map_data);
     }
 
     useEffect(() => {
-        if (get_time > 0 && get_time < get_Temp_Kill_Data.length) {
-            setTimeout(() => {
+        console.log(get_time);
+        if (get_time > 0 && get_time < get_Temp_Kill_Data.length && get_HeatMap != 'init') {
+            set_time_out(setTimeout(() => {
                 let arr = [];
+                let heatmap_arr = [];
+
                 arr.push(...get_Kill_Data);
                 arr.push(get_Temp_Kill_Data[get_time]);
+                heatmap_arr.push(...get_HeatMap_Data);
+                heatmap_arr.push(get_Temp_HeatMap_Data[get_time]);
                 console.log("ARRrrr : ", arr);
                 set_Kill_Data(arr);
+                set_HeatMap_Data(heatmap_arr);
+
+                get_HeatMap.setData({
+                    max: 7,
+                    data: heatmap_arr
+                })
                 set_time(get_time + 1);
-            }, 1000);
+            }, 300));
         }
-    }, [get_time])
+    }, [get_time, get_trigger])
 
 
     const Tab_Change_Handler = (key) => {
         console.log(key);
+        Init_Map_Canvas();
+        let cnvs = document.getElementsByClassName('heatmap-canvas').item(0);
+        if (cnvs) {
+            cnvs.className = "";
+        }
+
         if (key == 'detail_graph') {
             Init_Charts();
         }
         else if (key == 'detail_map') {
+            clearTimeout(get_time_out);
             Map_Data();
         }
+    }
+
+    const Champion_Select_Handler = ({ e, index }) => {
+        console.log(e);
+        Make_Selected_Data(index);
     }
 
     return (
@@ -399,8 +491,74 @@ const Detail_Data = (props) => {
                     <div id="chart_div" style={{ width: '700px', height: '800px' }} />
                 </TabPane>
                 <TabPane tab="맵" key="detail_map">
-                    <div>
-                        맵
+                    <div className="champ_select_div flex width100 spaceevenly">
+                        <div className="team1 flex width45 spaceevenly">
+                            {
+                                props.data.info.participants.map((item, index) => {
+                                    if (index > 4)
+                                        return;
+
+                                    const championName = item.championName;
+                                    const champion_Image_Data = championData.data[championName].image;
+
+                                    const one_sprite_size = 48;
+                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                    if (champion_Image_Data?.sprite == "champion5.png")
+                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                                    return (
+                                        <>
+                                            <div onClick={(e) => Champion_Select_Handler({ e: e, index: index })} >
+                                                <div key={item.championName}
+                                                    style={{
+                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                        backgroundSize: sprite_size,
+                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                        width: one_sprite_size + 'px',
+                                                        height: one_sprite_size + 'px',
+                                                    }} />
+                                            </div>
+                                        </>
+
+                                    )
+                                })
+                            }
+                        </div>
+                        <div className="team2 flex width45 spaceevenly">
+                            {
+                                props.data.info.participants.map((item, index) => {
+                                    if (index < 5)
+                                        return;
+
+                                    const championName = item.championName;
+                                    const champion_Image_Data = championData.data[championName].image;
+
+                                    const one_sprite_size = 48;
+                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                    if (champion_Image_Data?.sprite == "champion5.png")
+                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                                    return (
+                                        <>
+                                            <div onClick={(e) => Champion_Select_Handler({ e: e, index: index })}>
+                                                <div key={item.championName}
+                                                    style={{
+                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                        backgroundSize: sprite_size,
+                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                        width: one_sprite_size + 'px',
+                                                        height: one_sprite_size + 'px',
+                                                    }} />
+                                            </div>
+                                        </>
+
+                                    )
+                                })
+                            }
+                        </div>
+
                     </div>
                     <div className="minimap_div"
                         style={{
@@ -537,7 +695,7 @@ const Detail_Data = (props) => {
                                                     border: '0.8px solid',
                                                     borderColor: team_color
                                                 }}>
-                                                <div
+                                                <div key={(item.time * 100) + index + "sup"}
                                                     style={{
 
                                                         backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",

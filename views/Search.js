@@ -5,9 +5,10 @@ import moment from 'moment';
 import './css/searchCSS.css';
 import './css/Main.less'
 import Search_Data from './Search_Data';
-import { Spin } from 'antd';
+import { Input, Spin } from 'antd';
 
-const Search = () => {
+
+const Search_User = () => {
 
     const [getSummonerName, setSummonerName] = useState('');
     const [getSummonerBasicData, setSummonerBasicData] = useState({});
@@ -18,22 +19,23 @@ const Search = () => {
     const [get_Search_Loading, set_Search_Loading] = useState(false);
 
     const [get_Search_status, set_Search_status] = useState(false);
+    const { Search } = Input;
 
     useEffect(() => {
 
         axios.get('http://localhost:9900/test',
-        {
-            data: "AAA"
-        })
-        .then((response) => {
-            console.log(response.data);
-        })
+            {
+                data: "AAA"
+            })
+            .then((response) => {
+                console.log(response.data);
+            })
 
     }, [])
 
 
     const getSummonerBasicData_Handler = () => {
-        
+
         set_Search_status(true);
         set_Search_Loading(true);
 
@@ -65,23 +67,31 @@ const Search = () => {
 
     return (
         <>
-            <div className="width100">
-                <input type="text" onChange={inputHandler} value={getSummonerName}></input>
-                <button onClick={getSummonerBasicData_Handler}>클릭</button>
+            <div className="search_wrap width100">
+                <Search
+                    placeholder="소환사 검색" allowClear
+                    enterButton="검색"
+                    size="large"
+                    value={getSummonerName}
+                    onChange={inputHandler}
+                    onSearch={getSummonerBasicData_Handler}
+                />
+                {/* <input type="text" onChange={inputHandler} value={getSummonerName}></input>
+                <button onClick={getSummonerBasicData_Handler}>클릭</button> */}
             </div>
             {
                 get_Search_status &&
-                    <div>
-                        <Search_Data
-                            SummonerBasicData={getSummonerBasicData}
-                            SummonerIconURL={getSummonerIconURL}
-                            SummonerRankData={getSummonerRankData}
-                            loading={get_Search_Loading} />
-                    </div>
+                <div>
+                    <Search_Data
+                        SummonerBasicData={getSummonerBasicData}
+                        SummonerIconURL={getSummonerIconURL}
+                        SummonerRankData={getSummonerRankData}
+                        loading={get_Search_Loading} />
+                </div>
             }
 
         </>
     )
 }
 
-export default Search;
+export default Search_User;
