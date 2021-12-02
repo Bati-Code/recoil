@@ -49,6 +49,8 @@ const Detail_Data = (props) => {
                 death: player.deaths,
                 damageTaken: player.totalDamageTaken,
                 dtpd: (player.totalDamageTaken / cal_death).toFixed(1),
+                gold: player.goldEarned,
+                dpg: (player.totalDamageDealtToChampions / player.goldEarned).toFixed(1),
                 index: index
             }
             if (index < 5)
@@ -144,7 +146,9 @@ const Detail_Data = (props) => {
                                         <div className={team + "_bar"}
                                             style={{ width: (team1_player_deaL_data[key_data + "_avg"] * 0.92) + "%" }}>
                                             <div className="deal_text">
-                                                {team1_player_deaL_data[key_data]}{team1_player_deaL_data.death != undefined && "(" + team1_player_deaL_data.death + ")"}
+                                                {team1_player_deaL_data[key_data]}
+                                                {team1_player_deaL_data.death != undefined && "(" + team1_player_deaL_data.death + ")"}
+                                                {team1_player_deaL_data.gold != undefined && "(" + team1_player_deaL_data.gold + ")"}
                                             </div>
                                         </div>
                                     </div>
@@ -480,6 +484,15 @@ const Detail_Data = (props) => {
                             <div className="flex width100">
                                 <Make_Detail_Data team='team1' key_data='dtpd' wanted_data={['death']} />
                                 <Make_Detail_Data team='team2' key_data='dtpd' wanted_data={['death']} />
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                DPG - 성장 효율 (골드)
+                            </div>
+                            <div className="flex width100">
+                                <Make_Detail_Data team='team1' key_data='dpg' wanted_data={['deal', 'gold']} />
+                                <Make_Detail_Data team='team2' key_data='dpg' wanted_data={['deal', 'gold']} />
                             </div>
                         </div>
                     </div>

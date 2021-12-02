@@ -258,13 +258,26 @@ const Search_Data = (props) => {
                                                 </div>
                                             </div>
                                             <div className="MatchStatWrap">
-                                                <div>
+                                                <div className="KDA_ALL">
                                                     {user_champion_data.kills + " / "}
-                                                    {user_champion_data.deaths + " / "}
-                                                    {user_champion_data.assists}
+                                                    <span className="KDA_Death">{user_champion_data.deaths}</span>
+                                                    {" / " + user_champion_data.assists}
+                                                </div>
+                                                <div className="KDA">
+                                                    {kda_data} KDA
                                                 </div>
                                                 <div>
-                                                    {kda_data} KDA
+                                                    {
+                                                        user_champion_data.pentaKills != 0 ?
+                                                            <div className="KillSequence">펜타킬</div>
+                                                            : user_champion_data.quadraKills != 0 ?
+                                                                <div className="KillSequence">쿼드라킬</div>
+                                                                : user_champion_data.tripleKills != 0 ?
+                                                                    <div className="KillSequence"> 트리플킬</div>
+                                                                    : user_champion_data.doubleKills != 0 ?
+                                                                        <div className="KillSequence">더블킬</div>
+                                                                        : null
+                                                    }
                                                 </div>
                                             </div>
                                             <div className="MyStatInfo">

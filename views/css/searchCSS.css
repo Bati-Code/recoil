@@ -82,6 +82,25 @@
     font-size: 11px;
 }
 
+.MatchWrap .MatchStatWrap .KDA_ALL{
+
+}
+.MatchWrap .MatchStatWrap .KDA{
+    color:blueviolet;
+}
+.MatchWrap .KillSequence{
+    font-size: 10px;
+    font-weight: 500;
+    background-color: gold;
+    padding: 2px 9px;
+    border-radius: 43.25px;
+    color: #7a6262;
+}
+.MatchWrap .KDA_Death{
+    color: #cf0000;
+}
+
+
 .itemWrap{
     width: 115px;
 }
