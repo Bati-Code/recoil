@@ -24,7 +24,7 @@
     display: flex;
     flex-direction: row;
     margin-bottom: 5px;
-    padding: 0 10px;
+    padding: 0 5px;
     align-items: center;
     justify-content: space-evenly;
 }
@@ -78,6 +78,11 @@
     font-weight: 600;
 }
 
+.MatchWrap .MyStatInfo{
+    margin : 0 3px;
+    font-size: 12px;
+}
+
 .MatchWrap .MatchStatWrap .game_time{
     font-size: 11px;
 }
@@ -88,6 +93,12 @@
 .MatchWrap .MatchStatWrap .KDA{
     color:blueviolet;
 }
+
+.MatchWrap .MatchStatWrap .attribute{
+    color:#cf0000;
+    font-size: 11px;
+}
+
 .MatchWrap .KillSequence{
     font-size: 10px;
     font-weight: 500;
@@ -131,6 +142,11 @@
     white-space: nowrap;
 }
 
+.expand_button{
+    width: 5%;
+    color: blueviolet;
+}
+
 img {
     width: 100%;
 }
@@ -170,4 +186,19 @@ img {
 .champ_select_div{
     margin-bottom: 10px;
     align-items: center;
+}
+
+.movement_canvas{
+    z-index: 100;
+    position: absolute;
+    left: 0px;
+    height: 0px;
+    width: 700px;
+    height: 700px;
+}
+
+.killList{
+    width: 200px;
+    height: 500px;
+    overflow-y: scroll;
 }

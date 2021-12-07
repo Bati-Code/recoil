@@ -1,9 +1,15 @@
 const axios = require('axios');
 
-const riotAPI_Key = 'RGAPI-6bddc736-ecec-4241-92ff-69739a99b1e5';
+let riotAPI_Key = 'RGAPI-8d59fd24-7c1e-4efd-9d91-996f5f6beaf2';
 
 
 module.exports = (app) => {
+
+    app.post('/refreshAPI', (req, res) => {
+
+        riotAPI_Key = req.body.key;
+        res.json({ status: riotAPI_Key });
+    })
 
     app.post('/search', async (req, res) => {
 
@@ -100,6 +106,32 @@ module.exports = (app) => {
                 res.json(response.data);
             })
 
+    })
+
+    app.post('/rank', async (req, res) => {
+
+        const user_array = req.body.user_array;
+        let Match_User_Rank_Data = [];
+
+        await axios.all(
+            user_array.map(async (user, index) => {
+                try {
+                    await axios.get('https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/' + user,
+                        {
+                            headers: {
+                                'X-Riot-Token': riotAPI_Key,
+                            }
+                        })
+                        .then((response) => {
+                            Match_User_Rank_Data.push(response.data);
+                        })
+                } catch (error) {
+                    console.log("ERROR : ", error);
+                }
+            })
+        )
+
+        await res.json({ 'Match_User_Rank_Data': Match_User_Rank_Data });
     })
 
 }

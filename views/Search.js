@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react'
 import moment from 'moment';
 
 import './css/searchCSS.css';
-import './css/Main.less'
+import './css/Main.less';
 import Search_Data from './Search_Data';
 import { Input, Spin } from 'antd';
-
+import { Server_Config } from '../public/config/config.js'
 
 const Search_User = () => {
 
@@ -23,25 +23,18 @@ const Search_User = () => {
 
     useEffect(() => {
 
-        axios.get('http://localhost:9900/test',
-            {
-                data: "AAA"
-            })
-            .then((response) => {
-                console.log(response.data);
-            })
-
+        console.log(Server_Config.SERVER_ADDRESS);
     }, [])
 
 
-    const getSummonerBasicData_Handler = () => {
+    const getSummonerBasicData_Handler = ({ userName: userName }) => {
 
         set_Search_status(true);
         set_Search_Loading(true);
 
-        axios.post('http://localhost:9900/search',
+        axios.post(Server_Config.SERVER_ADDRESS + '/search',
             {
-                summonerName: getSummonerName
+                summonerName: userName ? userName : getSummonerName
             })
             .then((response) => {
                 const Sorted_Match_List = response.data.Summoner_Match_Data.sort((a, b) => b.info.gameId - a.info.gameId)
@@ -86,10 +79,12 @@ const Search_User = () => {
                         SummonerBasicData={getSummonerBasicData}
                         SummonerIconURL={getSummonerIconURL}
                         SummonerRankData={getSummonerRankData}
-                        loading={get_Search_Loading} />
+                        loading={get_Search_Loading}
+                        setSummonerName={setSummonerName}
+                        searchHandler={getSummonerBasicData_Handler}
+                    />
                 </div>
             }
-
         </>
     )
 }

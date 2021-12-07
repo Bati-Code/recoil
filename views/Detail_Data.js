@@ -3,12 +3,16 @@ import React, { useEffect } from 'react'
 import { useState } from 'react';
 import championData from '../public/json_data/champion.json'
 import MapData from '../public/json_data/map.json'
+import Summoner_Data from '../public/json_data/summoner.json'
+import Perk_Data from '../public/json_data/runesReforged.json'
 
 import * as ECharts from 'echarts';
 import Modal from 'antd/lib/modal/Modal';
 import { Button, Tooltip } from 'antd';
 import { Tabs } from 'antd';
 import h337 from 'heatmap.js';
+import { useRef } from 'react';
+import { Server_Config } from '../public/config/config';
 
 
 
@@ -31,6 +35,9 @@ const Detail_Data = (props) => {
 
     const [get_time_out, set_time_out] = useState('');
 
+    const [get_User_Rank_Data, set_User_Rank_Data] = useState('');
+
+    const canvasRef = useRef();
 
 
     const Make_Detail_Data = ({ team, key_data, wanted_data }) => {
@@ -161,6 +168,114 @@ const Detail_Data = (props) => {
         )
     }
 
+    const Make_Total_Data = () => {
+        const data = props.data.info.participants.map((player, index) => {
+            const championName = player.championName;
+            const champion_Image_Data = championData.data[championName].image;
+
+            const one_sprite_size = 36;
+            const summoner_one_sprite_size = 18;
+            let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+            if (champion_Image_Data?.sprite == "champion5.png")
+                sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+            let summoner_sprite_size = summoner_one_sprite_size * 10 + 'px ' + summoner_one_sprite_size * 4 + 'px';
+
+
+            const user_summoner1 = Object.keys(Summoner_Data.data).filter(e => {
+                return Summoner_Data.data[e].key == player?.summoner1Id;
+            });
+            const user_summoner2 = Object.keys(Summoner_Data.data).filter(e => {
+                return Summoner_Data.data[e].key == player?.summoner2Id;
+            });
+
+            const user_summoner1_data = Summoner_Data.data[user_summoner1[0]];
+            const user_summoner2_data = Summoner_Data.data[user_summoner2[0]];
+
+            //특성
+            const get_user_primary_perk_category = player?.perks.styles[0];
+            const get_user_primary_perk = get_user_primary_perk_category?.selections[0];
+            const get_user_sub_perk_category = player?.perks.styles[1];
+
+
+            const find_primary_perk_category = Perk_Data.filter(e =>
+                e.id == get_user_primary_perk_category?.style)[0];
+            const find_sub_category = Perk_Data.filter(e =>
+                e.id == get_user_sub_perk_category?.style)[0];
+
+            const find_primary_perk_main = find_primary_perk_category?.slots[0].runes.filter(e =>
+                e.id == get_user_primary_perk?.perk);
+
+            const primary_perk_img = '/images/' + find_primary_perk_main[0].icon;
+            const sub_perk_category_img = '/images/' + find_sub_category?.icon;
+
+            const primary_perk_data = find_primary_perk_main[0];
+            const sub_perk_data_name = find_sub_category?.name;
+
+            return (
+                <>
+                    <div className="flex" key={index * 9}>
+                        <div key={player.championName + index}
+                            style={{
+                                backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                backgroundSize: sprite_size,
+                                backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                width: one_sprite_size + 'px',
+                                height: one_sprite_size + 'px',
+                            }} />
+                        <div>
+                            <div key={user_summoner1[0] + index}
+                                style={{
+                                    backgroundImage: "url('/images/sprite/" + user_summoner1_data?.image.sprite + "')",
+                                    backgroundSize: summoner_sprite_size,
+                                    backgroundPositionX: -summoner_one_sprite_size * (user_summoner1_data?.image?.x / 48),
+                                    backgroundPositionY: -summoner_one_sprite_size * (user_summoner1_data?.image?.y / 48),
+                                    width: summoner_one_sprite_size + 'px',
+                                    height: summoner_one_sprite_size + 'px',
+                                }} />
+                            <div key={user_summoner2[0] + index}
+                                style={{
+                                    backgroundImage: "url('/images/sprite/" + user_summoner2_data?.image.sprite + "')",
+                                    backgroundSize: summoner_sprite_size,
+                                    backgroundPositionX: -summoner_one_sprite_size * (user_summoner2_data?.image?.x / 48),
+                                    backgroundPositionY: -summoner_one_sprite_size * (user_summoner2_data?.image?.y / 48),
+                                    width: summoner_one_sprite_size + 'px',
+                                    height: summoner_one_sprite_size + 'px',
+                                }} />
+                        </div>
+                        <div>
+                            <div
+                                style={{
+                                    backgroundImage: "url('" + primary_perk_img + "')",
+                                    backgroundSize: summoner_one_sprite_size + 'px ' + summoner_one_sprite_size + 'px',
+                                    width: summoner_one_sprite_size + 'px',
+                                    height: summoner_one_sprite_size + 'px',
+                                }} />
+                            <div
+                                style={{
+                                    backgroundImage: "url('" + sub_perk_category_img + "')",
+                                    backgroundSize: summoner_one_sprite_size + 'px ' + summoner_one_sprite_size + 'px',
+                                    width: summoner_one_sprite_size + 'px',
+                                    height: summoner_one_sprite_size + 'px',
+                                }} />
+                        </div>
+                        <div>
+                            <div>
+                                {player.summonerName}
+                            </div>
+                            <div>
+                                DATA
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )
+        })
+
+        return data;
+    }
+
     const Init_Charts = async () => {
 
         const newPromise = new Promise((resolve) => {
@@ -170,7 +285,7 @@ const Detail_Data = (props) => {
         newPromise.then(async () => {
             ECharts.dispose(document.getElementById('chart_div'));
             let data = '';
-            await axios.post('http://localhost:9900/test',
+            await axios.post(Server_Config.SERVER_ADDRESS + '/test',
                 {
                     match_id: props.data.metadata.matchId
                 })
@@ -296,9 +411,15 @@ const Detail_Data = (props) => {
     const Init_Map_Canvas = () => {
         clearTimeout(get_time_out);
         let cnvs = document.getElementsByClassName('heatmap-canvas').item(0);
+        let cnvs_move_ment = document.getElementsByClassName('movement_canvas').item(0);
         if (cnvs) {
             const ctx = cnvs.getContext('2d');
             ctx.clearRect(0, 0, cnvs.width, cnvs.height);
+            ctx.beginPath();
+        }
+        if (cnvs_move_ment) {
+            const ctx = cnvs_move_ment.getContext('2d');
+            ctx.clearRect(0, 0, cnvs_move_ment.width, cnvs_move_ment.height);
             ctx.beginPath();
         }
     }
@@ -335,6 +456,23 @@ const Detail_Data = (props) => {
     }
 
 
+    const Draw_Movement = (x, y, time) => {
+        console.log("DRAW : ", x, y, time);
+        const canv = document.getElementsByClassName('movement_canvas').item(0);
+        if (canv) {
+
+            const ctx = canv.getContext('2d');
+            if (time == 1) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = "white";
+            ctx.stroke();
+        }
+    }
+
     const Map_Data = async () => {
         //map x,y = 14000
         Init_Map_Canvas();
@@ -343,7 +481,7 @@ const Detail_Data = (props) => {
         let position_array = [];
         let map_data = MapData.data[props.data.info.mapId];
 
-        await axios.post('http://localhost:9900/test',
+        await axios.post(Server_Config.SERVER_ADDRESS + '/test',
             {
                 match_id: props.data.metadata.matchId
             })
@@ -398,6 +536,25 @@ const Detail_Data = (props) => {
         set_Map_Data(map_data);
     }
 
+    const Get_Match_User_Rank = () => {
+        let user_array = [];
+        props.data.info.participants.map((user, index) => {
+            user_array.push(user.summonerId);
+        })
+        axios.post(Server_Config.SERVER_ADDRESS + '/rank',
+            {
+                'user_array': user_array
+            })
+            .then((response) => {
+                console.log("RANK DATA : ", response.data);
+                set_User_Rank_Data(response.data);
+            })
+    }
+
+    useEffect(() => {
+        Get_Match_User_Rank();
+    }, [])
+
     useEffect(() => {
         console.log(get_time);
         if (get_time > 0 && get_time < get_Temp_Kill_Data.length && get_HeatMap != 'init') {
@@ -409,7 +566,7 @@ const Detail_Data = (props) => {
                 arr.push(get_Temp_Kill_Data[get_time]);
                 heatmap_arr.push(...get_HeatMap_Data);
                 heatmap_arr.push(get_Temp_HeatMap_Data[get_time]);
-                console.log("ARRrrr : ", arr);
+                console.log("ARRrrr : ", arr, "heatMap_ARR : ", heatmap_arr);
                 set_Kill_Data(arr);
                 set_HeatMap_Data(heatmap_arr);
 
@@ -417,6 +574,9 @@ const Detail_Data = (props) => {
                     max: 7,
                     data: heatmap_arr
                 })
+                if (get_time < 7) {
+                    Draw_Movement(get_Temp_HeatMap_Data[get_time].x, get_Temp_HeatMap_Data[get_time].y, get_time);
+                }
                 set_time(get_time + 1);
             }, 300));
         }
@@ -438,6 +598,9 @@ const Detail_Data = (props) => {
             clearTimeout(get_time_out);
             Map_Data();
         }
+        else if (key == 'detail_total') {
+            Get_Match_User_Rank();
+        }
     }
 
     const Champion_Select_Handler = ({ e, index }) => {
@@ -448,6 +611,11 @@ const Detail_Data = (props) => {
     return (
         <>
             <Tabs defaultActiveKey="1" onChange={Tab_Change_Handler}>
+                <TabPane tab="종합" key="detail_total">
+                    <div>
+                        <Make_Total_Data />
+                    </div>
+                </TabPane>
                 <TabPane tab="상세 정보" key="detail_bar">
                     <div className="detail_data_main">
                         <div>
@@ -573,162 +741,274 @@ const Detail_Data = (props) => {
                         </div>
 
                     </div>
-                    <div className="minimap_div"
-                        style={{
-                            backgroundImage: "url('/images/map/" + get_Map_Data?.image?.full + "')",
-                            backgroundSize: '700px 700px',
-                            width: '700px',
-                            height: '700px',
-                            position: 'relative',
-                            zIndex: '100'
-                        }}>
-                        {
-                            get_Kill_Data.map((item, index) => {
+                    <div className="flex">
+                        <div className="minimap_div"
+                            style={{
+                                backgroundImage: "url('/images/map/" + get_Map_Data?.image?.full + "')",
+                                backgroundSize: '700px 700px',
+                                width: '700px',
+                                height: '700px',
+                                position: 'relative',
+                                zIndex: '100'
+                            }}>
+                            <div className="minimap_movement_div">
+                                <canvas className="movement_canvas" width="700" height="700" id="canv" />
+                            </div>
+                            {
+                                get_Kill_Data.map((item, index) => {
 
-                                const data = item.kill.map((kill, index) => {
+                                    const data = item.kill.map((kill, index) => {
 
-                                    let map_size = 15000;
-                                    if (get_Map_Data.MapId == 12)
-                                        map_size = 14000;
+                                        let map_size = 15000;
+                                        if (get_Map_Data.MapId == 12)
+                                            map_size = 14000;
 
-                                    const kill_position_x = (kill.position.x / map_size) * 100;
-                                    const kill_position_y = (kill.position.y / map_size) * 100;
+                                        const kill_position_x = (kill.position.x / map_size) * 100;
+                                        const kill_position_y = (kill.position.y / map_size) * 100;
 
-                                    let team_color = '#bb0e0e';
+                                        let team_color = '#bb0e0e';
 
-                                    let killer_ID = kill.killerId;
-                                    if (killer_ID == 0)
-                                        killer_ID = 1;
+                                        let killer_ID = kill.killerId;
+                                        if (killer_ID == 0)
+                                            killer_ID = 1;
 
-                                    if (killer_ID < 6) {
-                                        team_color = '#0084ff';
-                                    }
+                                        if (killer_ID < 6) {
+                                            team_color = '#0084ff';
+                                        }
 
-                                    const champion_Name = props.data.info.participants[killer_ID - 1].championName;
-                                    const champion_Image_Data = championData.data[champion_Name].image;
+                                        const champion_Name = props.data.info.participants[killer_ID - 1].championName;
+                                        const champion_Image_Data = championData.data[champion_Name].image;
 
-                                    const victim_champion_Name = props.data.info.participants[kill.victimId - 1].championName;
-                                    const victim_champion_Image_Data = championData.data[victim_champion_Name].image;
+                                        const victim_champion_Name = props.data.info.participants[kill.victimId - 1].championName;
+                                        const victim_champion_Image_Data = championData.data[victim_champion_Name].image;
 
 
-                                    const one_sprite_size = 18;
+                                        const one_sprite_size = 18;
 
-                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
-                                    let victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
-                                    if (champion_Image_Data?.sprite == "champion5.png")
-                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
-                                    if (victim_champion_Image_Data?.sprite == "champion5.png")
-                                        victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+                                        let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                        let victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                        if (champion_Image_Data?.sprite == "champion5.png")
+                                            sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+                                        if (victim_champion_Image_Data?.sprite == "champion5.png")
+                                            victim_sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
 
-                                    const ToolTip_Data = () => {
+                                        const ToolTip_Data = () => {
+
+                                            return (
+                                                <>
+                                                    <div>
+                                                        {parseInt(kill.timestamp / 60000) + '분 ' +
+                                                            ((kill.timestamp % 60000) / 1000).toFixed(0) + '초'}
+                                                    </div>
+                                                    <div>
+                                                        KILL
+                                                        <div className="flex spaceevenly">
+                                                            <div key={(item.time * 100) + index + "kill"}
+                                                                style={{
+                                                                    backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                    backgroundSize: sprite_size,
+                                                                    backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                    backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                            <br />
+                                                            <div
+                                                                style={{
+                                                                    backgroundImage: "url('https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-match-history/global/default/kills.png')",
+                                                                    backgroundSize: '18px 18px',
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                            <br />
+                                                            <div key={(item.time * 100) + index + "victim"}
+                                                                style={{
+                                                                    backgroundImage: "url('/images/sprite/" + victim_champion_Image_Data?.sprite + "')",
+                                                                    backgroundSize: victim_sprite_size,
+                                                                    backgroundPositionX: -one_sprite_size * (victim_champion_Image_Data?.x / 48),
+                                                                    backgroundPositionY: -one_sprite_size * (victim_champion_Image_Data?.y / 48),
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {kill.assistingParticipantIds &&
+                                                        <div>
+                                                            ASSIST
+                                                            <div className="flex">
+                                                                {
+                                                                    kill.assistingParticipantIds.map((assist, index) => {
+                                                                        const champion_Name = props.data.info.participants[assist - 1].championName;
+                                                                        const champion_Image_Data = championData.data[champion_Name].image;
+
+                                                                        const one_sprite_size = 18;
+
+                                                                        let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+                                                                        if (champion_Image_Data?.sprite == "champion5.png")
+                                                                            sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+
+                                                                        return (
+                                                                            <>
+                                                                                <div key={(item.time * 100) + index + "assist" + (assist * 9)}
+                                                                                    style={{
+                                                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                                        backgroundSize: sprite_size,
+                                                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                                        width: one_sprite_size + 'px',
+                                                                                        height: one_sprite_size + 'px',
+                                                                                    }} />
+                                                                            </>
+                                                                        )
+                                                                    })}
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                </>
+                                            )
+                                        }
+
 
                                         return (
-                                            <>
-                                                <div>
-                                                    KILL
-                                                    <div className="flex spaceevenly">
-                                                        <div key={(item.time * 100) + index + "kill"}
-                                                            style={{
-                                                                backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
-                                                                backgroundSize: sprite_size,
-                                                                backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
-                                                                backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
-                                                                width: one_sprite_size + 'px',
-                                                                height: one_sprite_size + 'px',
-                                                            }}>
-                                                        </div>
-                                                        <br />
-                                                        <div
-                                                            style={{
-                                                                backgroundImage: "url('https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-match-history/global/default/kills.png')",
-                                                                backgroundSize: '18px 18px',
-                                                                width: one_sprite_size + 'px',
-                                                                height: one_sprite_size + 'px',
-                                                            }}>
-                                                        </div>
-                                                        <br />
-                                                        <div key={(item.time * 100) + index + "victim"}
-                                                            style={{
-                                                                backgroundImage: "url('/images/sprite/" + victim_champion_Image_Data?.sprite + "')",
-                                                                backgroundSize: victim_sprite_size,
-                                                                backgroundPositionX: -one_sprite_size * (victim_champion_Image_Data?.x / 48),
-                                                                backgroundPositionY: -one_sprite_size * (victim_champion_Image_Data?.y / 48),
-                                                                width: one_sprite_size + 'px',
-                                                                height: one_sprite_size + 'px',
-                                                            }}>
-                                                        </div>
+                                            <Tooltip title={ToolTip_Data} placement="top" key={(item.time * 100) + index + "tooltip"}>
+                                                <div key={(item.time * 100) + index}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: kill_position_x + "%",
+                                                        bottom: kill_position_y + "%",
+                                                        borderRadius: '100%',
+                                                        border: '0.8px solid',
+                                                        borderColor: team_color,
+                                                        zIndex: '200'
+                                                    }}>
+                                                    <div key={(item.time * 100) + index + "sup"}
+                                                        style={{
+
+                                                            backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                            backgroundSize: sprite_size,
+                                                            backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                            backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                            width: one_sprite_size + 'px',
+                                                            height: one_sprite_size + 'px',
+                                                            borderRadius: '100%',
+                                                        }}>
                                                     </div>
                                                 </div>
-                                                {kill.assistingParticipantIds &&
+                                            </Tooltip>
+                                        )
+                                    })
+
+                                    return (data)
+                                })
+                            }
+                        </div>
+                        {/* <div className="killList">
+                            {
+                                get_Kill_Data.map((item, index) => {
+                                    console.log("AA KILL : ", item);
+
+                                    let kill_data = '';
+
+                                    if (item.kill.length != 0) {
+                                        kill_data = item.kill.map((kill, index) => {
+
+                                            console.log("BB KILL : ", kill);
+
+                                            let killer_ID = kill.killerId;
+
+                                            const champion_Name = props.data.info.participants[killer_ID - 1].championName;
+                                            const champion_Image_Data = championData.data[champion_Name].image;
+
+                                            const victim_champion_Name = props.data.info.participants[kill.victimId - 1].championName;
+                                            const victim_champion_Image_Data = championData.data[victim_champion_Name].image;
+
+                                            let one_sprite_size = 18;
+                                            let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
+
+                                            return (
+                                                <>
                                                     <div>
-                                                        ASSIST
-                                                        <div className="flex">
-                                                            {
-                                                                kill.assistingParticipantIds.map((assist, index) => {
-                                                                    const champion_Name = props.data.info.participants[assist - 1].championName;
-                                                                    const champion_Image_Data = championData.data[champion_Name].image;
+                                                        <div className="flex spaceevenly">
+                                                            <div key={(item.time * 500) + index + "main" + killer_ID * 1000}
+                                                                style={{
 
-                                                                    const one_sprite_size = 18;
+                                                                    backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                    backgroundSize: sprite_size,
+                                                                    backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                    backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                            <div
+                                                                style={{
+                                                                    backgroundImage: "url('https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-match-history/global/default/kills.png')",
+                                                                    backgroundSize: '18px 18px',
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                            <div key={(item.time * 500) + index + "main"}
+                                                                style={{
 
-                                                                    let sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 3 + 'px';
-                                                                    if (champion_Image_Data?.sprite == "champion5.png")
-                                                                        sprite_size = one_sprite_size * 10 + 'px ' + one_sprite_size * 1 + 'px';
+                                                                    backgroundImage: "url('/images/sprite/" + victim_champion_Image_Data?.sprite + "')",
+                                                                    backgroundSize: sprite_size,
+                                                                    backgroundPositionX: -one_sprite_size * (victim_champion_Image_Data?.x / 48),
+                                                                    backgroundPositionY: -one_sprite_size * (victim_champion_Image_Data?.y / 48),
+                                                                    width: one_sprite_size + 'px',
+                                                                    height: one_sprite_size + 'px',
+                                                                }}>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div>
+                                                                <div key={(item.time * 500) + index + "main" + killer_ID * 1000}
+                                                                    style={{
 
-                                                                    return (
-                                                                        <>
-                                                                            <div key={(item.time * 100) + index + "assist" + (assist * 9)}
-                                                                                style={{
-                                                                                    backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
-                                                                                    backgroundSize: sprite_size,
-                                                                                    backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
-                                                                                    backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
-                                                                                    width: one_sprite_size + 'px',
-                                                                                    height: one_sprite_size + 'px',
-                                                                                }} />
-                                                                        </>
-                                                                    )
-                                                                })}
+                                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
+                                                                        backgroundSize: sprite_size,
+                                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
+                                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
+                                                                        width: one_sprite_size + 'px',
+                                                                        height: one_sprite_size + 'px',
+                                                                    }}>
+                                                                </div>
+                                                                <div>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div key={(item.time * 500) + index + "main"}
+                                                                    style={{
+
+                                                                        backgroundImage: "url('/images/sprite/" + victim_champion_Image_Data?.sprite + "')",
+                                                                        backgroundSize: sprite_size,
+                                                                        backgroundPositionX: -one_sprite_size * (victim_champion_Image_Data?.x / 48),
+                                                                        backgroundPositionY: -one_sprite_size * (victim_champion_Image_Data?.y / 48),
+                                                                        width: one_sprite_size + 'px',
+                                                                        height: one_sprite_size + 'px',
+                                                                    }}>
+                                                                </div>
+                                                                <div>
+
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                }
-
-                                            </>
-                                        )
+                                                </>
+                                            )
+                                        })
                                     }
 
-
-                                    return (
-                                        <Tooltip title={ToolTip_Data} placement="top" key={(item.time * 100) + index + "tooltip"}>
-                                            <div key={(item.time * 100) + index}
-                                                style={{
-                                                    position: 'absolute',
-                                                    left: kill_position_x + "%",
-                                                    bottom: kill_position_y + "%",
-                                                    borderRadius: '100%',
-                                                    border: '0.8px solid',
-                                                    borderColor: team_color
-                                                }}>
-                                                <div key={(item.time * 100) + index + "sup"}
-                                                    style={{
-
-                                                        backgroundImage: "url('/images/sprite/" + champion_Image_Data?.sprite + "')",
-                                                        backgroundSize: sprite_size,
-                                                        backgroundPositionX: -one_sprite_size * (champion_Image_Data?.x / 48),
-                                                        backgroundPositionY: -one_sprite_size * (champion_Image_Data?.y / 48),
-                                                        width: one_sprite_size + 'px',
-                                                        height: one_sprite_size + 'px',
-                                                        borderRadius: '100%',
-                                                    }}>
-                                                </div>
-                                            </div>
-                                        </Tooltip>
-                                    )
+                                    return (kill_data);
                                 })
-
-                                return (data)
-                            })
-                        }
+                            }
+                        </div> */}
                     </div>
+
                 </TabPane>
             </Tabs>
         </>

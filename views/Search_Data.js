@@ -10,6 +10,7 @@ import Item_Data from '../public/json_data/item.json';
 
 import './css/searchCSS.css';
 import './css/Main.less'
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import Tooltip from '../item/Tooltip';
 import Detail_Data from './Detail_Data';
 
@@ -43,6 +44,11 @@ const Search_Data = (props) => {
             set_Detail_Bar_Click(true);
         }
 
+    }
+
+    const Other_User_Search_Handler = (userName) => {
+        props.setSummonerName(userName);
+        props.searchHandler({ userName: userName });
     }
 
 
@@ -112,18 +118,24 @@ const Search_Data = (props) => {
                                 //게임 시간
                                 let temp_game_time = data.info.gameDuration;
                                 let game_Duration = 0;
-
+                                let min = 0;
+                                let sec = 0;
                                 if (!data.info.gameEndTimestamp) {
                                     if (temp_game_time > 100000) {
                                         temp_game_time = temp_game_time / 1000;
                                     }
-                                    const min = parseInt(temp_game_time / 60);
-                                    const sec = (temp_game_time % 60).toFixed(0);
+                                    min = parseInt(temp_game_time / 60);
+                                    sec = (temp_game_time % 60).toFixed(0);
+
                                     game_Duration = min + "분 " + sec + "초";
                                 }
                                 else {
                                     game_Duration = moment(data.info.gameEndTimestamp
                                         - data.info.gameStartTimestamp).format('mm분 ss초');
+                                    min = moment(data.info.gameEndTimestamp
+                                        - data.info.gameStartTimestamp).format('mm');
+                                    sec = moment(data.info.gameEndTimestamp
+                                        - data.info.gameStartTimestamp).format('ss');
 
                                 }
 
@@ -143,6 +155,20 @@ const Search_Data = (props) => {
 
                                 if (user_champion_data?.deaths == 0)
                                     kda_data = "perfect";
+
+                                //킬관여율
+                                let team1_kills = 0;
+                                let team2_kills = 0;
+                                const user_team = user_champion_data?.teamId;
+
+                                data.info.participants.map((user, index) => {
+                                    if (user.teamId == 100)
+                                        team1_kills = team1_kills + user.kills;
+                                    else if (user.teamId == 200)
+                                        team2_kills = team2_kills + user.kills;
+                                })
+
+                                console.log("TEAM : ", team1_kills, team2_kills);
 
 
                                 //스펠
@@ -192,9 +218,6 @@ const Search_Data = (props) => {
 
                                 user_item_array.splice(3, 0, Item_Data.data[user_champion_data['item6']]);
                                 user_item_array.push(undefined);
-
-
-                                console.log("ITEM : ", user_item_array);
 
 
                                 //챔피언 이미지
@@ -266,6 +289,14 @@ const Search_Data = (props) => {
                                                 <div className="KDA">
                                                     {kda_data} KDA
                                                 </div>
+                                                <div className="attribute">
+                                                    킬관여율 {
+                                                        user_team == 100 ?
+                                                            (((user_champion_data.kills + user_champion_data.assists) / team1_kills) * 100).toFixed(0)
+                                                            :
+                                                            (((user_champion_data.kills + user_champion_data.assists) / team2_kills) * 100).toFixed(0)
+                                                    }%
+                                                </div>
                                                 <div>
                                                     {
                                                         user_champion_data.pentaKills != 0 ?
@@ -282,11 +313,19 @@ const Search_Data = (props) => {
                                             </div>
                                             <div className="MyStatInfo">
                                                 <div>
-                                                    레벨 : {user_champion_data.champLevel}
+                                                    {user_champion_data.champLevel}Lv
                                                 </div>
                                                 <div>
-                                                    CS : {user_champion_data.totalMinionsKilled
-                                                        + user_champion_data.neutralMinionsKilled}
+                                                    {user_champion_data.totalMinionsKilled
+                                                        + user_champion_data.neutralMinionsKilled} CS
+                                                </div>
+                                                <div>
+                                                    {((user_champion_data.totalMinionsKilled
+                                                        + user_champion_data.neutralMinionsKilled) / min).toFixed(2)}
+                                                </div>
+                                                <div>
+                                                    {user_champion_data.visionScore}
+                                                    ({user_champion_data.visionWardsBoughtInGame}) 시야
                                                 </div>
 
                                             </div>
@@ -365,7 +404,7 @@ const Search_Data = (props) => {
                                                         }
 
                                                         return (
-                                                            <div key={index + 100}>
+                                                            <div key={index + 100} onClick={() => { Other_User_Search_Handler(user.summonerName) }}>
                                                                 <div className="flex">
                                                                     <div>
                                                                         <div className="sub_champion_image"
@@ -401,7 +440,7 @@ const Search_Data = (props) => {
                                                             return;
                                                         }
                                                         return (
-                                                            <div key={index + 200}>
+                                                            <div key={index + 200} onClick={() => { Other_User_Search_Handler(user.summonerName) }}>
                                                                 <div className="flex team_participants">
                                                                     <div>
                                                                         <div className="sub_champion_image"
@@ -424,8 +463,9 @@ const Search_Data = (props) => {
                                                     })}
                                                 </div>
                                             </div>
-                                            <div onClick={() => detail_bar_handler(data.info.gameId)}>
-                                                {">"}
+                                            <div className="expand_button"
+                                                onClick={() => detail_bar_handler(data.info.gameId)}>
+                                                <KeyboardDoubleArrowDownIcon />
                                             </div>
                                         </div>
                                         <div className={"detail " + (get_Detail_Bar_Click &&
@@ -447,7 +487,6 @@ const Search_Data = (props) => {
                             }) ?? "정보 없음"}
                         </div>
                     </div>
-                    {true || <div>false</div>}
                 </div>
             </Spin>
         </>
