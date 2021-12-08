@@ -1,13 +1,14 @@
 const axios = require('axios');
 
-let riotAPI_Key = 'RGAPI-8d59fd24-7c1e-4efd-9d91-996f5f6beaf2';
-
 
 module.exports = (app) => {
 
+    let riotAPI_Key = 'RGAPI-8ca38a35-3ea9-4461-95cc-d9839c806367';
+
     app.post('/refreshAPI', (req, res) => {
 
-        riotAPI_Key = req.body.key;
+        riotAPI_Key = req.body.key_data;
+        console.log(riotAPI_Key);
         res.json({ status: riotAPI_Key });
     })
 
@@ -88,6 +89,7 @@ module.exports = (app) => {
 
         } catch (error) {
             console.log(error);
+            res.json({ "search_Error": error });
         }
 
     })
@@ -123,15 +125,16 @@ module.exports = (app) => {
                             }
                         })
                         .then((response) => {
-                            Match_User_Rank_Data.push(response.data);
+                            Match_User_Rank_Data.push({ data: response.data, index: index });
                         })
                 } catch (error) {
-                    console.log("ERROR : ", error);
+                    console.log(error);
+                    res.json({ 'Match_User_Rank_Data': -1 });
                 }
             })
         )
 
-        await res.json({ 'Match_User_Rank_Data': Match_User_Rank_Data });
+        Match_User_Rank_Data.sort((a, b) => { return (a.index - b.index) })
+        res.json({ 'Match_User_Rank_Data': Match_User_Rank_Data });
     })
-
 }

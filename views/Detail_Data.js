@@ -212,6 +212,45 @@ const Detail_Data = (props) => {
             const primary_perk_data = find_primary_perk_main[0];
             const sub_perk_data_name = find_sub_category?.name;
 
+
+            //랭크
+            let Rank_Tier = "UnRanked";
+            let Rank_Division = '';
+
+            console.log("GET_RANK_DATA : ", get_User_Rank_Data);
+
+            if (get_User_Rank_Data) {
+
+                const Solo_Rank = get_User_Rank_Data.Match_User_Rank_Data[index].data.filter(
+                    (e) => e.queueType == "RANKED_SOLO_5x5");
+
+                if (Solo_Rank.length != 0) {
+                    Rank_Tier = Solo_Rank[0].tier;
+
+                    switch (Solo_Rank[0].rank) {
+                        case 'I':
+                            Rank_Division = 1;
+                            break;
+                        case 'II':
+                            Rank_Division = 2;
+                            break;
+                        case 'III':
+                            Rank_Division = 3;
+                            break;
+                        case 'IV':
+                            Rank_Division = 4;
+                            break;
+                        default:
+                            Rank_Division = '';
+                            break;
+                    }
+
+                }
+
+
+            }
+
+
             return (
                 <>
                     <div className="flex" key={index * 9}>
@@ -267,6 +306,15 @@ const Detail_Data = (props) => {
                             <div>
                                 DATA
                             </div>
+                        </div>
+                        <div>
+                            <div>
+                                {Rank_Tier}
+                            </div>
+                            <div>
+                                {Rank_Division}
+                            </div>
+
                         </div>
                     </div>
                 </>
@@ -541,7 +589,7 @@ const Detail_Data = (props) => {
         props.data.info.participants.map((user, index) => {
             user_array.push(user.summonerId);
         })
-        axios.post(Server_Config.SERVER_ADDRESS + '/rank',
+        axios.post(Server_Config.TEST_SERVER_ADDRESS + '/rank',
             {
                 'user_array': user_array
             })
