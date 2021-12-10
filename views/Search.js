@@ -24,6 +24,10 @@ const Search_User = () => {
     useEffect(() => {
 
         console.log(Server_Config.SERVER_ADDRESS);
+        axios.get(Server_Config.SERVER_ADDRESS + '/challenger')
+        .then((response) => {
+            console.log(response.data);
+        })
     }, [])
 
 

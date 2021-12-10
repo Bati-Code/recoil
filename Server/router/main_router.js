@@ -137,4 +137,21 @@ module.exports = (app) => {
         Match_User_Rank_Data.sort((a, b) => { return (a.index - b.index) })
         res.json({ 'Match_User_Rank_Data': Match_User_Rank_Data });
     })
+
+    app.get('/challenger', (req, res) => {
+
+        axios.get('https://kr.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5',
+            {
+                headers: {
+                    'X-Riot-Token': riotAPI_Key,
+                }
+            })
+            .then((response) => {
+                res.json({ "Challenger_Data": response.data });
+            })
+            .catch((err) => {
+                console.log(err);
+                res.json({ "ERROR : ": err });
+            })
+    })
 }
