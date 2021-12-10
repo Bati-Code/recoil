@@ -3,7 +3,7 @@ const axios = require('axios');
 
 module.exports = (app) => {
 
-    let riotAPI_Key = 'RGAPI-8ca38a35-3ea9-4461-95cc-d9839c806367';
+    let riotAPI_Key = 'RGAPI-7372a975-3fd8-4113-b541-3155653027b5';
 
     app.post('/refreshAPI', (req, res) => {
 
@@ -147,7 +147,13 @@ module.exports = (app) => {
                 }
             })
             .then((response) => {
-                res.json({ "Challenger_Data": response.data });
+
+                let data = response.data;
+                let sort = data.entries.sort((a, b) => { return(b.leaguePoints - a.leaguePoints) });
+                let limit_num = 10;
+                sort.splice(limit_num, sort.length);
+
+                res.json({ "Challenger_Data": sort });
             })
             .catch((err) => {
                 console.log(err);
