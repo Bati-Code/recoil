@@ -138,7 +138,7 @@ module.exports = (app) => {
         res.json({ 'Match_User_Rank_Data': Match_User_Rank_Data });
     })
 
-    app.get('/challenger', (req, res) => {
+    app.get('/challenger', async (req, res) => {
 
         axios.get('https://kr.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5',
             {
@@ -146,14 +146,29 @@ module.exports = (app) => {
                     'X-Riot-Token': riotAPI_Key,
                 }
             })
-            .then((response) => {
+            .then(async (response) => {
 
                 let data = response.data;
-                let sort = data.entries.sort((a, b) => { return(b.leaguePoints - a.leaguePoints) });
-                let limit_num = 10;
+                let sort = data.entries.sort((a, b) => { return (b.leaguePoints - a.leaguePoints) });
+                let limit_num = 5;
                 sort.splice(limit_num, sort.length);
 
-                res.json({ "Challenger_Data": sort });
+                await axios.all(
+                    sort.map(async (user, index) => {
+                        await axios.get('https://kr.api.riotgames.com/lol/summoner/v4/summoners/' + user.summonerId,
+                            {
+                                headers: {
+                                    'X-Riot-Token': riotAPI_Key,
+                                }
+                            })
+                            .then((response) => {
+                                sort[index].summoner_data = response.data;
+                            })
+                    })
+                )
+
+
+                await res.json({ "Challenger_Data": sort });
             })
             .catch((err) => {
                 console.log(err);
