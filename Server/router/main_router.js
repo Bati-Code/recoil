@@ -3,7 +3,7 @@ const axios = require('axios');
 
 module.exports = (app) => {
 
-    let riotAPI_Key = 'RGAPI-7372a975-3fd8-4113-b541-3155653027b5';
+    let riotAPI_Key = 'RGAPI-d4c36492-284a-4cb3-bb42-45bcb85f12b3';
 
     app.post('/refreshAPI', (req, res) => {
 
@@ -15,6 +15,8 @@ module.exports = (app) => {
     app.post('/search', async (req, res) => {
 
         const summonerName = req.body.summonerName;
+        let type = '';
+        let count = 10;
         const pre_api_uri = 'https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + summonerName;
         const encode_api_uri = encodeURI(pre_api_uri);
 
@@ -22,6 +24,13 @@ module.exports = (app) => {
         let summoner_Rank_Data = [];
         let Summoner_Match_List = [];
         let Summoner_Match_Data = [];
+
+        if (req.body.type) {
+            type = req.body.type;
+        }
+        if(req.body.count){
+            count = req.body.count;
+        }
 
         try {
 
@@ -49,7 +58,7 @@ module.exports = (app) => {
 
 
             await axios.get('https://asia.api.riotgames.com/lol/match/v5/matches' +
-                '/by-puuid/' + summoner_Basic_Data.puuid + '/ids?start=0&count=10',
+                '/by-puuid/' + summoner_Basic_Data.puuid + `/ids?type=${type}&start=0&count=${count}`,
                 {
                     headers: {
                         'X-Riot-Token': riotAPI_Key,

@@ -187,6 +187,10 @@ img {
     margin-bottom: 10px;
     align-items: center;
 }
+#selected{
+    background-color: white;
+    background-blend-mode: luminosity;
+}
 
 .movement_canvas{
     z-index: 100;
