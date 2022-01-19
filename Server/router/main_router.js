@@ -4,6 +4,8 @@ const e = require('express');
 let riotAPI_Key = 'RGAPI-4091d591-9c7d-43ac-b637-3178ef737577';
 let riotVerision = '12.1.1';
 let champion_Data = null;
+const champion_Data_Array = {};
+const item_Data_Array = {};
 let item_Data = null;
 let item_child_data = null;
 const champion_detail_data_array = {};
@@ -22,31 +24,16 @@ const makeChild = (list, itemDB) => {
     return list_data;
 };
 
-const get_Init_Data = async () => {
-    try {
-        const version = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json', {
-            headers: {
-                'X-Riot-Token': riotAPI_Key,
-            },
-        });
-        riotVerision = version.data[0];
+const makeChampionData = async ({ lang }) => {
+    if (!champion_Data_Array[lang]) {
         const champion = await axios.get(
-            `http://ddragon.leagueoflegends.com/cdn/${version.data[0]}/data/ko_KR/champion.json`,
+            `http://ddragon.leagueoflegends.com/cdn/${riotVerision}/data/${lang}/champion.json`,
             {
                 headers: {
                     'X-Riot-Token': riotAPI_Key,
                 },
             }
         );
-        const itemdata = await axios.get(
-            `http://ddragon.leagueoflegends.com/cdn/${version.data[0]}/data/ko_KR/item.json`,
-            {
-                headers: {
-                    'X-Riot-Token': riotAPI_Key,
-                },
-            }
-        );
-
         let fchampion_Data = Object.entries(champion.data.data).map(([key, value], index) => {
             delete value.info;
             delete value.partype;
@@ -57,31 +44,78 @@ const get_Init_Data = async () => {
             return [key, value];
         });
 
-        champion_Data = fchampion_Data.sort((a, b) => {
+        fchampion_Data.sort((a, b) => {
             if (a[1].name < b[1].name) return -1;
             else if (a[1].name == b[1].name) return 0;
             else return 1;
         });
-        item_Data = itemdata.data.data;
-
-        const itemList = [];
-        for (let item in item_Data) {
-            itemList.push({
-                key: item,
-                legendary:
-                    itemdata.data.groups.findIndex(group => group.id === item && group.MaxGroupOwnable === '1') !== -1
-                        ? true
-                        : false,
-                mythic: item_Data[item].description.includes('rarityMythic') ? true : false,
-
-                ...item_Data[item],
-            });
-        }
-
-        item_child_data = makeChild(itemList, item_Data);
-    } catch (error) {
-        console.log(error);
+        champion_Data_Array[lang] = fchampion_Data;
     }
+};
+
+const get_Init_Data = async () => {
+    try {
+        const version = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json', {
+            headers: {
+                'X-Riot-Token': riotAPI_Key,
+            },
+        });
+        riotVerision = version.data[0];
+    } catch (err) {
+        res.json(err);
+    }
+    //     const champion = await axios.get(
+    //         `http://ddragon.leagueoflegends.com/cdn/${version.data[0]}/data/ko_KR/champion.json`,
+    //         {
+    //             headers: {
+    //                 'X-Riot-Token': riotAPI_Key,
+    //             },
+    //         }
+    //     );
+    //     const itemdata = await axios.get(
+    //         `http://ddragon.leagueoflegends.com/cdn/${version.data[0]}/data/ko_KR/item.json`,
+    //         {
+    //             headers: {
+    //                 'X-Riot-Token': riotAPI_Key,
+    //             },
+    //         }
+    //     );
+
+    //     let fchampion_Data = Object.entries(champion.data.data).map(([key, value], index) => {
+    //         delete value.info;
+    //         delete value.partype;
+    //         delete value.stats;
+    //         delete value.version;
+    //         value.num = index;
+
+    //         return [key, value];
+    //     });
+
+    //     champion_Data = fchampion_Data.sort((a, b) => {
+    //         if (a[1].name < b[1].name) return -1;
+    //         else if (a[1].name == b[1].name) return 0;
+    //         else return 1;
+    //     });
+    //     item_Data = itemdata.data.data;
+
+    //     const itemList = [];
+    //     for (let item in item_Data) {
+    //         itemList.push({
+    //             key: item,
+    //             legendary:
+    //                 itemdata.data.groups.findIndex(group => group.id === item && group.MaxGroupOwnable === '1') !== -1
+    //                     ? true
+    //                     : false,
+    //             mythic: item_Data[item].description.includes('rarityMythic') ? true : false,
+
+    //             ...item_Data[item],
+    //         });
+    //     }
+
+    //     item_child_data = makeChild(itemList, item_Data);
+    // } catch (error) {
+    //     console.log(error);
+    // }
 };
 
 module.exports = app => {
@@ -94,6 +128,8 @@ module.exports = app => {
 
     app.post('/refreshVersion', (req, res) => {
         riotVerision = req.body.version;
+        champion_Data_Array = {};
+        item_Data_Array = {};
         console.log(riotVerision);
         res.json({ version: riotVerision });
     });
@@ -352,29 +388,73 @@ module.exports = app => {
     });
 
     app.get('/champion', async (req, res) => {
-        res.json(champion_Data);
+        try {
+            await makeChampionData({ lang: req.query.lang });
+            res.json(champion_Data_Array[req.query.lang]);
+        } catch (error) {
+            res.json(error);
+        }
     });
 
     app.get('/champion/:champion_name', async (req, res) => {
-        if (!champion_detail_data_array[req.params.champion_name]) {
+        const data_name = req.params.champion_name + req.query.lang;
+
+        if (!champion_detail_data_array[data_name]) {
             try {
                 const { data } = await axios.get(
-                    `http://ddragon.leagueoflegends.com/cdn/11.24.1/data/ko_KR/champion/${req.params.champion_name}.json`
+                    `http://ddragon.leagueoflegends.com/cdn/${riotVerision}/data/${req.query.lang}/champion/${req.params.champion_name}.json`
                 );
-                const filtered_champion_sprite_num = champion_Data.filter(
+
+                if (!champion_Data_Array[req.query.lang]) {
+                    await makeChampionData({ lang: req.query.lang });
+                }
+
+                const filtered_champion_sprite_num = champion_Data_Array[req.query.lang].filter(
                     e => e[1].id === req.params.champion_name
                 )[0][1].num;
                 data.data[req.params.champion_name].sprite_num = filtered_champion_sprite_num;
-                champion_detail_data_array[req.params.champion_name] = data.data[req.params.champion_name];
+                champion_detail_data_array[data_name] = data.data[req.params.champion_name];
             } catch (err) {
                 res.json(err);
             }
         }
-        res.json(champion_detail_data_array[req.params.champion_name]);
+        res.json(champion_detail_data_array[data_name]);
     });
 
     app.get('/item', async (req, res) => {
-        res.json(item_child_data);
+        try {
+            if (!item_Data_Array[req.query.lang]) {
+                const { data } = await axios.get(
+                    `http://ddragon.leagueoflegends.com/cdn/${riotVerision}/data/${req.query.lang}/item.json`,
+                    {
+                        headers: {
+                            'X-Riot-Token': riotAPI_Key,
+                        },
+                    }
+                );
+
+                let item_Data = data.data;
+                const itemList = [];
+                for (let item in item_Data) {
+                    itemList.push({
+                        key: item,
+                        legendary:
+                            data.groups.findIndex(group => group.id === item && group.MaxGroupOwnable === '1') !== -1
+                                ? true
+                                : false,
+                        mythic: item_Data[item].description.includes('rarityMythic') ? true : false,
+
+                        ...item_Data[item],
+                    });
+                }
+
+                item_Data_Array[req.query.lang] = makeChild(itemList, item_Data);
+            }
+
+            res.json(item_Data_Array[req.query.lang]);
+        } catch (error) {
+            res.json(error);
+        }
     });
 
     app.get('/version', (req, res) => {
