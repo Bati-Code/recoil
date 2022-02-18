@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.use(cors());
 
-require('./router/main_router')(app);
+require('../server/router/main_router')(app);
 
 app.listen(PORT, () => {
   console.log(`Example app listening at http://localhost:${PORT}`);

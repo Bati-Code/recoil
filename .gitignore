@@ -1,3 +1,5 @@
 node_modules
 build
 main_router.js
+.env
+env/

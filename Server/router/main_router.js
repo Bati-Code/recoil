@@ -1,7 +1,8 @@
 const axios = require('axios');
 const e = require('express');
+require('dotenv').config();
 
-let riotAPI_Key = 'RGAPI-aa2781c8-4edf-492c-896c-c7ffd21be849';
+let riotAPI_Key = process.env.RIOT_API;
 let riotVerision = '12.1.1';
 let champion_Data_Array = {};
 let item_Data_Array = {};
@@ -236,8 +237,14 @@ module.exports = app => {
                             .then(async response => {
                                 let match = response.data;
 
+                                if (match.info.queueId === 0) {
+                                    return;
+                                }
+
                                 if (match.info.queueId === 420) {
-                                    const team = [null, null, null, null, null, null, null, null, null, null];
+                                    let team = [null, null, null, null, null, null, null, null, null, null];
+                                    let temp_team = [];
+                                    const bad_user = [];
 
                                     await match.info.participants.map((user, index) => {
                                         if (user.teamPosition !== '') {
@@ -258,8 +265,21 @@ module.exports = app => {
                                                     user.teamId === 100 ? (team[4] = user) : (team[9] = user);
                                                     break;
                                             }
+                                        } else {
+                                            bad_user.push(user);
                                         }
                                     });
+
+                                    if (team.findIndex(e => e === null) !== -1) {
+                                        temp_team = [...team];
+                                        team.map((player, index) => {
+                                            if (player === null) temp_team[index] = bad_user[0];
+                                            bad_user.shift();
+
+                                            if (bad_user.length <= 0) return;
+                                        });
+                                        team = [...temp_team];
+                                    }
 
                                     match.info.participants = team;
                                 }
@@ -288,90 +308,103 @@ module.exports = app => {
         const summonerName_array = req.body.summonerName_array;
         let summoner_Array_Data = [];
         let type = '';
-        let count = 10;
+        let count = 5;
 
-        summonerName_array.map(async (summonerName, index) => {
-            const pre_api_uri = 'https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + summonerName;
-            const encode_api_uri = encodeURI(pre_api_uri);
+        try {
+            const promise = await Promise.all(
+                summonerName_array.map(async (summonerName, index) => {
+                    if (index > 4) return;
+                    const pre_api_uri =
+                        'https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + summonerName;
+                    const encode_api_uri = encodeURI(pre_api_uri);
 
-            let summoner_Basic_Data = {};
-            let summoner_Rank_Data = [];
-            let Summoner_Match_List = [];
-            let Summoner_Match_Data = [];
+                    let summoner_Basic_Data = {};
+                    let summoner_Rank_Data = [];
+                    let Summoner_Match_List = [];
+                    let Summoner_Match_Data = [];
 
-            if (req.body.type) {
-                type = req.body.type;
-            }
-            if (req.body.count) {
-                count = req.body.count;
-            }
+                    if (req.body.type) {
+                        type = req.body.type;
+                    }
+                    if (req.body.count) {
+                        count = req.body.count;
+                    }
 
-            try {
-                await axios
-                    .get(encode_api_uri, {
-                        headers: {
-                            'X-Riot-Token': riotAPI_Key,
-                        },
-                    })
-                    .then(response => {
-                        summoner_Basic_Data = response.data;
-                    });
+                    try {
+                        await axios
+                            .get(encode_api_uri, {
+                                headers: {
+                                    'X-Riot-Token': riotAPI_Key,
+                                },
+                            })
+                            .then(response => {
+                                summoner_Basic_Data = response.data;
+                            });
 
-                await axios
-                    .get('https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/' + summoner_Basic_Data.id, {
-                        headers: {
-                            'X-Riot-Token': riotAPI_Key,
-                        },
-                    })
-                    .then(response => {
-                        summoner_Rank_Data = response.data;
-                    });
-
-                await axios
-                    .get(
-                        'https://asia.api.riotgames.com/lol/match/v5/matches' +
-                            '/by-puuid/' +
-                            summoner_Basic_Data.puuid +
-                            `/ids?type=${type}&start=0&count=${count}`,
-                        {
-                            headers: {
-                                'X-Riot-Token': riotAPI_Key,
-                            },
-                        }
-                    )
-                    .then(response => {
-                        Summoner_Match_List = response.data;
-                    });
-
-                await axios.all(
-                    Summoner_Match_List.map(async (match, index) => {
-                        try {
-                            await axios
-                                .get('https://asia.api.riotgames.com/lol/match/v5/matches/' + match, {
+                        await axios
+                            .get(
+                                'https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/' +
+                                    summoner_Basic_Data.id,
+                                {
                                     headers: {
                                         'X-Riot-Token': riotAPI_Key,
                                     },
-                                })
-                                .then(response => {
-                                    console.log(response.data);
-                                    Summoner_Match_Data.push(response.data);
-                                });
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    })
-                );
+                                }
+                            )
+                            .then(response => {
+                                summoner_Rank_Data = response.data;
+                            });
 
-                summoner_Array_Data.push({
-                    basic: Summoner_Basic_Data,
-                    rank: Summoner_Rank_Data,
-                    match: Summoner_Match_Data,
-                });
-            } catch (error) {
-                summoner_Array_Data.push({ error: error });
-                console.log(error);
-            }
-        });
+                        await axios
+                            .get(
+                                'https://asia.api.riotgames.com/lol/match/v5/matches' +
+                                    '/by-puuid/' +
+                                    summoner_Basic_Data.puuid +
+                                    `/ids?type=${type}&start=0&count=${count}`,
+                                {
+                                    headers: {
+                                        'X-Riot-Token': riotAPI_Key,
+                                    },
+                                }
+                            )
+                            .then(response => {
+                                Summoner_Match_List = response.data;
+                            });
+
+                        await axios.all(
+                            Summoner_Match_List.map(async (match, index) => {
+                                try {
+                                    await axios
+                                        .get('https://asia.api.riotgames.com/lol/match/v5/matches/' + match, {
+                                            headers: {
+                                                'X-Riot-Token': riotAPI_Key,
+                                            },
+                                        })
+                                        .then(response => {
+                                            // console.log(response.data);
+                                            Summoner_Match_Data.push(response.data);
+                                        });
+                                } catch (error) {
+                                    console.log(error);
+                                }
+                            })
+                        );
+
+                        summoner_Array_Data.push({
+                            basic: summoner_Basic_Data,
+                            rank: summoner_Rank_Data,
+                            match: Summoner_Match_Data,
+                        });
+                    } catch (error) {
+                        summoner_Array_Data.push({ error: error });
+                        res.json(error);
+                    }
+                })
+            );
+            await res.json(summoner_Array_Data);
+        } catch (error) {
+            await res.json(error);
+        }
     });
 
     app.post('/test', async (req, res) => {
